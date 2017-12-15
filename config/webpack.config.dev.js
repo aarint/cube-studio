@@ -249,9 +249,13 @@ module.exports = {
   node: {
     dgram: 'empty',
     fs: 'empty',
-    net: 'empty',
     tls: 'empty',
     child_process: 'empty',
+  },
+  externals: {
+    'electron': 'require("electron")',
+    //'ssh2': 'require("ssh2")',
+    //'net': 'require("net")'
   },
   // Turn off performance hints during development because we don't do any
   // splitting or minification in interest of speed. These warnings become
