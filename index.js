@@ -13,10 +13,10 @@ if (isDevelopment) {
 let win;
 
 function createWindow() {
-    win = new BrowserWindow({ width: 800, height: 600 });
+    win = new BrowserWindow({ width: 800, height: 800 });
 
     if (isDevelopment) {
-        //win.webContents.openDevTools();
+        win.webContents.openDevTools();
     }
 
     win.loadURL(url.format({
