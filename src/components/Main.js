@@ -11,7 +11,9 @@ const { dialog } = window.require('electron').remote;
 const { Content, Sider } = Layout;
 
 export default class Main extends React.PureComponent {
-    openConnection = () => {
+
+
+    openConnection ()  {
         console.log('shit');
         console.log(dialog);
 

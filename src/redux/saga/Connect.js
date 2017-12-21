@@ -21,11 +21,9 @@ export function* connectToDB() {
             });
         }).connect({
             host: '10.2.1.128',
-            port: 22
+            port: 6379,
+            username:'chaos'
         })
-
-
-
     } catch (ex) {
         console.log(ex);
     }
