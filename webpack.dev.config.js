@@ -17,6 +17,19 @@ module.exports = {
     publicPath: '/',
     filename: 'bundle.js'
   },
+  externals: {
+    'electron': 'require("electron")',
+    'redis': 'require("redis")',
+    'net': 'require("net")',
+    'remote': 'require("remote")',
+    'shell': 'require("shell")',
+    'app': 'require("app")',
+    'ipc': 'require("ipc")',
+    'fs': 'require("fs")',
+    'buffer': 'require("buffer")',
+    'system': '{}',
+    'file': '{}'
+  },
   module: {
     rules: [
       {

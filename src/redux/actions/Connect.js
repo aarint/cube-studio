@@ -1,22 +1,16 @@
 export const ACTION_CONNECT = "ACTION_CONNECT";
 export const ACTION_DISCONNECT = "ACTION_DISCONNECT";
-export const ACTION_UPDATE_CONNECT_STATUS = "ACTION_UPDATE_CONNECT_STATUS";
 
-export function actionConnect(config) {
+export function actionConnect() {
     return {
         type: ACTION_CONNECT,
-        config
+        instance
     }
 }
 
-export function actionDisconnect() {
+export function actionDisconnect(instance) {
     return {
-        type: ACTION_DISCONNECT
-    }
-}
-
-export function actionUpdateConnectStatus() {
-    return {
-        type: ACTION_UPDATE_CONNECT_STATUS
+        type: ACTION_DISCONNECT,
+        instance
     }
 }
