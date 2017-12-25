@@ -4,16 +4,17 @@ export const INSTANCE_DELETE = "INSTANCE_DELETE";
 export const INSTANCE_GET_CONFIG = "INSTANCE_GET_CONFIG";
 export const INSTANCE_SET_CONFIG = "INSTANCE_SET_CONFIG";
 
-export function addInstance() {
+export function addInstance(instance) {
     return {
-        type: INSTANCE_ADD
+        type: INSTANCE_ADD,
+        instance
     }
 }
 
-export function getInstance(instance) {
+export function getInstance(key) {
     return {
         type: INSTANCE_GET,
-        instance
+        key
     }
 }
 

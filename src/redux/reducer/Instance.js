@@ -1,10 +1,4 @@
-import {
-    INSTANCE_ADD,
-    INSTANCE_DELETE,
-    INSTANCE_GET,
-    INSTANCE_GET_CONFIG,
-    INSTANCE_SET_CONFIG
-} from '../actions/Instance';
+import { INSTANCE_ADD, INSTANCE_DELETE, INSTANCE_GET, INSTANCE_GET_CONFIG, INSTANCE_SET_CONFIG } from '../actions/Instance';
 
 export function handleInstance(state = {}, action) {
     switch (action.type) {

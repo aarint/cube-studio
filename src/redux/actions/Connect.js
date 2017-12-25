@@ -1,30 +1,37 @@
-export const CONNECT_START = "CONNECT_START";
-export const CONNECT_DONE = "CONNECT_DONE";
-export const CONNECT_ERROR = "CONNECT_ERROR";
-export const DISCONNECT = "DISCONNECT";
+export const CONNECT_DB = "CONNECT_DB";
+export const CONNECT_DB_START = "CONNECT_START";
+export const CONNECT_DB_DONE = "CONNECT_DONE";
+export const CONNECT_DB_ERROR = "CONNECT_ERROR";
+export const DISCONNECT_DB = "DISCONNECT";
 
-export function connectStart() {
+export function connectDB() {
     return {
-        type: CONNECT_START
+        type: CONNECT_DB
     }
 }
 
-export function connectDone(client) {
+export function connectDBStart() {
     return {
-        type: CONNECT_DONE,
+        type: CONNECT_DB_START
+    }
+}
+
+export function connectDBDone(client) {
+    return {
+        type: CONNECT_DB_DONE,
         client
     }
 }
 
-export function connectError(msg) {
+export function connectDBError(msg) {
     return {
-        type: CONNECT_ERROR,
+        type: CONNECT_DB_ERROR,
         msg
     }
 }
 
-export function disconnect() {
+export function disconnectDB() {
     return {
-        type: DISCONNECT
+        type: DISCONNECT_DB
     }
 }

@@ -5,9 +5,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Button, Layout, notification } from 'antd';
-import { actionConnect } from '../redux/actions/Connect';
-import { getInstance, getConfig } from '../redux/actions/Instance';
-import { doingString, addString, getString } from '../redux/actions/Redis';
+import { connectDB, connectDBDone } from '../redux/actions/Connect';
+import { addInstance, getInstance, getConfig } from '../redux/actions/Instance';
+import { doingString, addString, getString, getAllKeys } from '../redux/actions/Redis';
 
 const { Content, Sider } = Layout;
 
@@ -18,9 +18,14 @@ class Instance extends React.PureComponent {
         this.curInstance = this.props.curInstance;
     }
 
-    connectDB() {
-        console.log('instances');
-        this.props.actionConnect();
+    /**
+     * TODO:
+     * These code will be moved to the welcome component.
+     * The connection operation will be finished after inputting the login information.
+     * 
+     */
+    connectDB = () => {
+
     }
 
     addString() {
@@ -35,7 +40,14 @@ class Instance extends React.PureComponent {
         notification.open({ message: "Get a string!!!" });
     }
 
+    getAllKeys() {
+        this.props.getAllKeys();
+    }
+
     render() {
+        const { instance, keys } = this.props;
+        console.log(instance, keys);
+
         return (
             <div>
                 <Sider style={styles.sider}>
@@ -45,15 +57,14 @@ class Instance extends React.PureComponent {
                 <Button type="primary" onClick={() => this.connectDB()}>Connect</Button>
                 <Button type="primary" onClick={() => this.addString()}>Add a string.</Button>
                 <Button type="primary" onClick={() => this.getString()}>Get a string.</Button>
+                <Button type="primary" onClick={() => this.getAllKeys()}>Get all keys.</Button>
             </div>
         )
     }
 
     componentDidMount() {
-        console.log('component did mount');
-
         this.props.getConfig();
-        this.props.getInstance();
+        this.props.addInstance();
     }
 }
 
@@ -61,11 +72,18 @@ function mapStateToProps(state) {
     console.log(state);
 
     return {
-        config: state.handleInstance.config
+        keys: state.handleInstance.keys,
+        instance: state.handleConnection.client
     }
 }
 
-export default connect(mapStateToProps, { actionConnect, getConfig, getInstance, addString, getString })(Instance);
+export default connect(mapStateToProps, {
+    connectDB, connectDBDone,
+    getConfig,
+    addInstance, getInstance,
+    addString, getString,
+    getAllKeys
+})(Instance);
 
 const styles = {
     sider: {

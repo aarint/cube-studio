@@ -1,52 +1,56 @@
 import { setItem, getItem, removeItem } from './StorageUtil';
 
-let currentInstance = {};
+let currentInstances = [], activeInstance;
 
-export function addInstance(key, instance) {
+export function getActiveInstance() {
+    return activeInstance;
+}
+
+export function addNewInstance(key, instance) {
     try {
-        setItem(key, instance);
-        currentInstance = Object.assign({}, currentInstance, instance);
+        currentInstances.push({ key: key, instance: instance });
+        activeInstance = instance;
+        
+        console.log(activeInstance);
     } catch (ex) {
         console.log('Wrong with adding aninstance');
     }
 }
 
-export function getAllInstances() {
+export function getInstanceByKey(key) {
     try {
-        return getItem(key);
-    } catch (ex) {
-        console.log("Wrong with getting all instances.");
-        return null;
-    }
-}
+        if (currentInstances) {
+            return null;
+        }
 
-export function getInstance(key) {
-    try {
-        return getItem(key);
+        currentInstances.filter((item, index) => {
+            if (item.key === key) {
+                return item.instance
+            }
+        })
     } catch (ex) {
         console.log("Wrong with getting an instance.");
         return null;
     }
 }
 
-export function deleteInstance(key) {
+export function deleteInstanceByKey(key) {
     try {
-        removeItem(key);
+        key && currentInstances && currentInstances.forEach((item, index) => {
+
+        })
     } catch (ex) {
         console.log("Wrong with deleting an instance.");
     }
 }
 
-export function getCurrentInstance(key) {
+export function getAllInstances() {
     try {
-        return currentInstance;
+        return currentInstances;
     } catch (ex) {
-        console.log(ex);
+        console.log("Wrong with getting all instances.");
+        return null;
     }
-}
-
-export function clearCurrentInstance(key) {
-
 }
 
 export function getConfig() { }

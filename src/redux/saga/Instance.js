@@ -1,37 +1,42 @@
-import {setItem,getItem,removeItem} from '../../utils/StorageUtil';
+import { put, call } from "redux-saga/effects";
+import { addInstance, getInstance } from "../actions/Instance";
+import { addNewInstance, deleteInstanceByKey } from '../../utils/InstanceUtil';
 
-export function* addInstance(key,instance){
-    try{
-        setItem(key,instance);
-    }catch(ex){
+export function* addConnectedInstance(action) {
+    try {
+        console.log(action);
+
+        //yield put(addInstance(action.instance));
+        //addNewInstance(action.key, action.instance);
+    } catch (ex) {
+        deleteInstanceByKey(action.key);
         console.log('Wrong with adding aninstance');
     }
 }
 
-export function* getAllInstances(){
-    try{
-        return getItem(key);
-    }catch(ex){
+export function* getAllConnectedInstances() {
+    try {
+    } catch (ex) {
         console.log("Wrong with getting all instances.");
         return null;
     }
 }
 
-export function* getInstance(key){
-    try{
-        return getItem(key);
-    }catch(ex){
+export function* getConnectedInstance(key) {
+    try {
+    } catch (ex) {
         console.log("Wrong with getting an instance.");
         return null;
     }
 }
 
-export function* deleteInstance(key){
-    try{
-        removeItem(key);
-    }catch(ex){
+export function* deleteConnectedInstance(key) {
+    try {
+    } catch (ex) {
         console.log("Wrong with deleting an instance.");
     }
 }
 
-export function* getConfig(){}
+export function* getConnectedConfig(key) {
+    console.log('get current connnected instance config!!!');
+}

@@ -3,14 +3,7 @@ export const STRING_ADD = "STRING_ADD";
 export const STRING_DELETE = "STRING_DELETE";
 export const STRING_GET = "STRING_GET";
 
-export const HASH_ADD = "";
-export const HASH_DLETE = "";
-export const HASH_GET = "";
-
-export const LIST_SET = "";
-export const LIST_GET = "";
-
-export const SET_ADD = "";
+export const KEYS = "KEYS";
 
 export function doingString() {
     return {
@@ -37,5 +30,12 @@ export function getString(value) {
     return {
         type: STRING_GET,
         value
+    }
+}
+
+export function getAllKeys(keys) {
+    return {
+        type: KEYS,
+        keys
     }
 }

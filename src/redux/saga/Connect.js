@@ -1,14 +1,15 @@
 import { put, call } from 'redux-saga/effects';
 import Redis from 'redis';
-import { connectStart, connectDone, connectError } from '../actions/Connect';
+import { connectDBStart, connectDBDone, connectDBError } from '../actions/Connect';
+import {addNewInstance} from "../../utils/InstanceUtil";
 
-export function* connectDB(name) {
+export function* connectDBInstance(name) {
     try {
-        yield put(connectStart());
+        yield put(connectDBStart());
 
         let client = Redis.createClient(6379, '10.2.1.128');
 
-        client.on('connect', () => {
+        client.on('connect',  () => {
             console.log('Client :: connect');
         })
 
@@ -16,14 +17,16 @@ export function* connectDB(name) {
             console.log('Client :: end');
         })
 
-        yield put(connectDone(client));
+        addNewInstance("shit",client);
+
+        yield put(connectDBDone(client));
     } catch (ex) {
-        yield put(connectError(ex));
+        yield put(connectDBError(ex));
         console.log(ex);
     }
 }
 
-export function* disconnectDB(instance) {
+export function* disconnectDBInstance(instance) {
     try {
         instance && instance.quit();
     } catch (ex) {
