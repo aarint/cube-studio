@@ -1,14 +1,21 @@
-import { ACTION_CONNECT, ACTION_DISCONNECT } from '../actions/Connect';
+import { CONNECT_START, CONNECT_DONE, CONNECT_ERROR, DISCONNECT } from '../actions/Connect';
 
-const connectState = {
-    msg: null
+export function handleConnection(state = {}, action) {
+    switch (action.type) {
+        case CONNECT_START:
+            return state;
+        case CONNECT_DONE:
+            return Object.assign({}, state, action.client);
+        case CONNECT_ERROR:
+            return Object.assign({}, state, action.msg);
+        default:
+            return state;
+    }
 }
 
-export function handleConnection(state = connectState, action) {
+export function handleDisconnection(state = {}, action) {
     switch (action.type) {
-        case ACTION_CONNECT:
-            return Object.assign({},state,action.instance);
-        case ACTION_DISCONNECT:
+        case DISCONNECT:
             return state;
         default:
             return state;

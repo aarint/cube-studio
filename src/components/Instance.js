@@ -4,9 +4,10 @@
 
 import React from 'react';
 import { connect } from 'react-redux';
-import { Button, Layout } from 'antd';
+import { Button, Layout, notification } from 'antd';
 import { actionConnect } from '../redux/actions/Connect';
-import {} from '../redux/actions/Instance';
+import { getInstance, getConfig } from '../redux/actions/Instance';
+import { doingString, addString, getString } from '../redux/actions/Redis';
 
 const { Content, Sider } = Layout;
 
@@ -22,6 +23,18 @@ class Instance extends React.PureComponent {
         this.props.actionConnect();
     }
 
+    addString() {
+        this.props.addString('test', 'test string...');
+
+        notification.open({ message: "Did add a string successfully!!!" });
+    }
+
+    getString() {
+        this.props.getString('test');
+
+        notification.open({ message: "Get a string!!!" });
+    }
+
     render() {
         return (
             <div>
@@ -30,16 +43,29 @@ class Instance extends React.PureComponent {
                 </Sider>
                 <Button type="primary" onClick={() => this.connectDB()}>Test Connection</Button>
                 <Button type="primary" onClick={() => this.connectDB()}>Connect</Button>
+                <Button type="primary" onClick={() => this.addString()}>Add a string.</Button>
+                <Button type="primary" onClick={() => this.getString()}>Get a string.</Button>
             </div>
         )
+    }
+
+    componentDidMount() {
+        console.log('component did mount');
+
+        this.props.getConfig();
+        this.props.getInstance();
     }
 }
 
 function mapStateToProps(state) {
-    return {}
+    console.log(state);
+
+    return {
+        config: state.handleInstance.config
+    }
 }
 
-export default connect(mapStateToProps, { actionConnect })(Instance);
+export default connect(mapStateToProps, { actionConnect, getConfig, getInstance, addString, getString })(Instance);
 
 const styles = {
     sider: {

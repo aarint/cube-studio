@@ -5,25 +5,35 @@ export const INSTANCE_GET_CONFIG = "INSTANCE_GET_CONFIG";
 export const INSTANCE_SET_CONFIG = "INSTANCE_SET_CONFIG";
 
 export function addInstance() {
-    type: INSTANCE_ADD
+    return {
+        type: INSTANCE_ADD
+    }
 }
 
 export function getInstance(instance) {
-    type: INSTANCE_GET,
-    instance
+    return {
+        type: INSTANCE_GET,
+        instance
+    }
 }
 
 export function deleteInstance(instance) {
-    type: INSTANCE_DELETE,
-    instance
+    return {
+        type: INSTANCE_DELETE,
+        instance
+    }
 }
 
 export function getConfig(config) {
-    type: INSTANCE_GET_CONFIG,
-    config
+    return {
+        type: INSTANCE_GET_CONFIG,
+        config
+    }
 }
 
 export function setConfig(config) {
-    type: INSTANCE_SET_CONFIG,
-    config
+    return {
+        type: INSTANCE_SET_CONFIG,
+        config
+    }
 }

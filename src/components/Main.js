@@ -1,37 +1,85 @@
 /**
  * Main page show the all connections that include saved in storage.
  * Click one will show the DB instance in the opened tab window.
+ * 
+ * @author f.achilles
  */
 
 import React from 'react';
-import { Button, Layout } from 'antd';
+import { connect } from 'react-redux';
+import { Tabs } from 'antd';
+import Welcome from './Welcome';
 import Instance from './Instance';
 
-const { Content, Sider } = Layout;
+const TabPane = Tabs.TabPane;
 
-export default class Main extends React.PureComponent {
+class Main extends React.PureComponent {
+    constructor(props) {
+        super(props);
+        this.newTabIndex = 0;
+        const panes = [
+            { title: 'Welcome', content: <Welcome addInstance={this.add} />, key: '1', closable: false },
+            { title: '10.2.1.128', content: <Instance />, key: '2' }
+        ];
+        this.state = {
+            activeKey: panes[0].key,
+            panes,
+        };
+    }
 
-    /**
-     * Open connection dialog. Connect the DB after input the connection config.
-     * Then create a new tab that contain the DB instance.
-     */
-    openConnection() {
-        //dialog.showOpenDialog({ properties: ['openFile', 'openDirectory', 'multiSelections'] })
+    onChange = (activeKey) => {
+        console.log('onchange');
+        this.setState({ activeKey });
+    }
+
+    onEdit = (targetKey, action) => {
+        this[action](targetKey);
+    }
+
+    add = () => {
+        const panes = this.state.panes;
+        const activeKey = `newTab${this.newTabIndex++}`;
+        panes.push({ title: 'New Tab', content: <Main />, key: activeKey });
+        this.setState({ panes, activeKey });
+    }
+
+    remove = (targetKey) => {
+        let activeKey = this.state.activeKey;
+        let lastIndex;
+        this.state.panes.forEach((pane, i) => {
+            if (pane.key === targetKey) {
+                lastIndex = i - 1;
+            }
+        });
+        const panes = this.state.panes.filter(pane => pane.key !== targetKey);
+        if (lastIndex >= 0 && activeKey === targetKey) {
+            activeKey = panes[lastIndex].key;
+        }
+        this.setState({ panes, activeKey });
     }
 
     render() {
+        const { panes } = this.state;
+
         return (
-            <Layout>
-                <Content style={{ marginLeft: '200px', overflow: 'initial' }}>
-                    <div style={{ padding: 0, background: '#fff', textAlign: 'center' }}>
-                        <div></div>
-                        <Button type="primary" onClick={this.openConnection}>primary</Button>
-                    </div>
-                </Content>
-            </Layout>
-        )
+            <Tabs
+                hideAdd
+                onChange={this.onChange}
+                activeKey={this.state.activeKey}
+                type="editable-card"
+                onEdit={this.onEdit}>
+                {
+                    panes.map(pane =>
+                        <TabPane tab={pane.title} key={pane.key} closable={pane.closable}>
+                            {pane.content}
+                        </TabPane>)
+                }
+            </Tabs>
+        );
     }
 }
+
+export default connect(state => { return {} }, {})(Main);
 
 const styles = {
     sider: {

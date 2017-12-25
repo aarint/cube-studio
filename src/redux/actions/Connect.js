@@ -1,16 +1,30 @@
-export const ACTION_CONNECT = "ACTION_CONNECT";
-export const ACTION_DISCONNECT = "ACTION_DISCONNECT";
+export const CONNECT_START = "CONNECT_START";
+export const CONNECT_DONE = "CONNECT_DONE";
+export const CONNECT_ERROR = "CONNECT_ERROR";
+export const DISCONNECT = "DISCONNECT";
 
-export function actionConnect() {
+export function connectStart() {
     return {
-        type: ACTION_CONNECT,
-        instance
+        type: CONNECT_START
     }
 }
 
-export function actionDisconnect(instance) {
+export function connectDone(client) {
     return {
-        type: ACTION_DISCONNECT,
-        instance
+        type: CONNECT_DONE,
+        client
+    }
+}
+
+export function connectError(msg) {
+    return {
+        type: CONNECT_ERROR,
+        msg
+    }
+}
+
+export function disconnect() {
+    return {
+        type: DISCONNECT
     }
 }

@@ -15,7 +15,7 @@ export function handleInstance(state = {}, action) {
         case INSTANCE_DELETE:
             return state;
         case INSTANCE_GET_CONFIG:
-            return state;
+            return Object.assign({}, state, action.config);
         case INSTANCE_SET_CONFIG:
             return state;
         default:
