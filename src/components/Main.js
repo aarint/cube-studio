@@ -60,7 +60,7 @@ class Main extends React.PureComponent {
         this.setState({ panes, activeKey });
     }
 
-    componentDidUpdate(){
+    componentDidUpdate() {
         //this.props.connected && this.add();
     }
 
@@ -70,6 +70,7 @@ class Main extends React.PureComponent {
         return (
             <div>
                 <Tabs
+                    style={{ marginBottom: 0 }}
                     hideAdd
                     onChange={this.onChange}
                     activeKey={this.state.activeKey}

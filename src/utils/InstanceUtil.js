@@ -10,8 +10,6 @@ export function addNewInstance(key, instance) {
     try {
         currentInstances.push({ key: key, instance: instance });
         activeInstance = instance;
-        
-        console.log(activeInstance);
     } catch (ex) {
         console.log('Wrong with adding aninstance');
     }
