@@ -1,4 +1,4 @@
-import { INSTANCE_ADD, INSTANCE_DELETE, INSTANCE_GET } from '../actions/Instance';
+import { INSTANCE_ADD, INSTANCE_DELETE, INSTANCE_GET, INSTANCES_SAVED_GET_DONE } from '../actions/Instance';
 
 export function handleInstance(state = {}, action) {
     switch (action.type) {
@@ -8,6 +8,8 @@ export function handleInstance(state = {}, action) {
             return Object.assign({}, state, action.instance);
         case INSTANCE_DELETE:
             return state;
+        case INSTANCES_SAVED_GET_DONE:
+            return Object.assign({}, state, action.instances)
         default:
             return state;
     }

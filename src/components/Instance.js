@@ -4,13 +4,14 @@
 
 import React from 'react';
 import { connect } from 'react-redux';
-import { Button, Layout, Tree, notification, List } from 'antd';
+import { Button, Layout, Tree, notification, List, Select } from 'antd';
 import { connectDB, connectDBDone } from '../redux/actions/Connect';
 import { addInstance, getInstance } from '../redux/actions/Instance';
-import { doingString, addString, getAllKeys, getConfig, setConfig, getKeyValue } from '../redux/actions/Redis';
+import { doingString, getAllKeys, getConfig, setConfig, getKeyValue } from '../redux/actions/Redis';
 
 const { Content, Sider } = Layout;
 const TreeNode = Tree.TreeNode;
+const Option = Select.Option;
 
 class Instance extends React.PureComponent {
     state = {
@@ -22,12 +23,6 @@ class Instance extends React.PureComponent {
         super(props)
 
         this.curInstance = this.props.curInstance;
-    }
-
-    addStr() {
-        this.props.addString('test', 'test string...');
-
-        notification.open({ message: "Did add a string successfully!!!" });
     }
 
     getStr() {
@@ -48,6 +43,21 @@ class Instance extends React.PureComponent {
         }
 
         return treeNodes;
+    }
+
+    constructOptions() {
+        const { config } = this.props;
+
+        if (!config) {
+            return;
+        }
+
+        let options = [];
+        for (let i = 1; i <= parseInt(config.value); i++) {
+            options.push(<Option key={`${i}`} value={`${i}`}>{`DB${i}`}</Option>)
+        }
+
+        return options;
     }
 
     constructKeys() {
@@ -74,6 +84,8 @@ class Instance extends React.PureComponent {
         console.log(keys, info);
     }
 
+
+
     render() {
         const { currentKey } = this.state;
         const { instance, keys, config, obj } = this.props;
@@ -83,12 +95,18 @@ class Instance extends React.PureComponent {
         return (
             <Layout>
                 <Sider style={styles.sider}>
+                    <Select style={{ width: '100%' }} >
+                        {this.constructOptions()}
+                    </Select>
                     <Tree defaultExpandAll={true}
                         onSelect={this.onSelectNode}>
                         <TreeNode title="Redis" key="0">
                             {this.constructDBTree()}
                         </TreeNode>
                     </Tree>
+                    <ul style={{background:'green'}}>
+                        {this.constructKeys()}
+                    </ul>
                 </Sider>
                 <Content style={{ marginLeft: '200px', overflow: 'initial' }}>
                     <div>
@@ -123,9 +141,7 @@ function mapStateToProps(state) {
     }
 }
 
-export default connect(mapStateToProps, {
-    addString, getConfig, setConfig, getAllKeys, getKeyValue
-})(Instance);
+export default connect(mapStateToProps, { getConfig, setConfig, getAllKeys, getKeyValue })(Instance);
 
 const styles = {
     sider: {

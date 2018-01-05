@@ -1,21 +1,21 @@
 import { setItem, getItem, removeItem } from './StorageUtil';
 
-let currentInstances = [], activeInstance;
+let savedInstances = [], connectedInstances = [], activeInstance = {};
 
 export function getActiveInstance() {
-    return activeInstance;
+    return activeInstance.instance;
 }
 
-export function addNewInstance(key, instance) {
+export function addConnectedInstance(config, instance) {
     try {
-        currentInstances.push({ key: key, instance: instance });
-        activeInstance = instance;
+        connectedInstances.push(instance);
+        activeInstance = { config, instance };
     } catch (ex) {
         console.log('Wrong with adding aninstance');
     }
 }
 
-export function getInstanceByKey(key) {
+export function getSavedInstanceByKey(key) {
     try {
         if (currentInstances) {
             return null;
@@ -32,23 +32,11 @@ export function getInstanceByKey(key) {
     }
 }
 
-export function deleteInstanceByKey(key) {
+export function getSavedInstances() {
     try {
-        key && currentInstances && currentInstances.forEach((item, index) => {
-
-        })
-    } catch (ex) {
-        console.log("Wrong with deleting an instance.");
-    }
-}
-
-export function getAllInstances() {
-    try {
-        return currentInstances;
+        return savedInstances;
     } catch (ex) {
         console.log("Wrong with getting all instances.");
         return null;
     }
 }
-
-export function getConfig() { }

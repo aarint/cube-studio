@@ -21,7 +21,7 @@ class Main extends React.PureComponent {
         this.newTabIndex = 0;
         const panes = [
             { title: 'Welcome', content: <Welcome addInstance={this.add.bind(this)} />, key: '1', closable: false },
-            { title: '10.2.1.128', content: <Instance />, key: '2' }
+            // { title: '10.2.1.128', content: <Instance />, key: '2' }
         ];
         this.state = {
             activeKey: panes[0].key,
@@ -38,10 +38,10 @@ class Main extends React.PureComponent {
         this[action](targetKey);
     }
 
-    add = () => {
+    add = (title) => {
         const panes = this.state.panes;
         const activeKey = `newTab${this.newTabIndex++}`;
-        panes.push({ title: 'New Tab', content: <Instance />, key: activeKey });
+        panes.push({ title: title, content: <Instance />, key: activeKey });
         this.setState({ panes, activeKey });
     }
 
@@ -92,7 +92,6 @@ class Main extends React.PureComponent {
 
 export default connect(state => {
     return {
-        connected: state.handleConnection.connected,
         instance: state.handleConnection.client
     }
 }, { connectDB, addInstance })(Main);

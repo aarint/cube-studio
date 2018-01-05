@@ -1,24 +1,22 @@
 import { put, call } from "redux-saga/effects";
-import { addInstance, getInstance } from "../actions/Instance";
-import { addNewInstance, deleteInstanceByKey } from '../../utils/InstanceUtil';
+import { addInstance, getInstance, getSavedInstancesDone } from "../actions/Instance";
+import { getSavedInstances } from '../../utils/InstanceUtil';
 
 export function* addConnectedInstance(action) {
     try {
-        console.log(action);
-
         //yield put(addInstance(action.instance));
         //addNewInstance(action.key, action.instance);
     } catch (ex) {
-        deleteInstanceByKey(action.key);
         console.log('Wrong with adding aninstance');
     }
 }
 
-export function* getAllConnectedInstances() {
+export function* getAllSavedInstances() {
     try {
+        const instances = getSavedInstances();
+        yield put(getSavedInstancesDone(instances));
     } catch (ex) {
-        console.log("Wrong with getting all instances.");
-        return null;
+        console.log(ex);
     }
 }
 

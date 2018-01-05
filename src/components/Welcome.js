@@ -5,10 +5,10 @@
 
 import React from 'react';
 import { connect } from 'react-redux';
-import { Modal, Button, Layout } from 'antd';
+import { Modal, Button, Layout,Input } from 'antd';
 import Instance from './Instance';
-import { connectDB, connectDBDone } from '../redux/actions/Connect';
-import { addInstance, getInstance, getConfig } from '../redux/actions/Instance';
+import { connectDB } from '../redux/actions/Connect';
+import { getSavedInstances } from '../redux/actions/Instance';
 
 const { Content, Sider } = Layout;
 
@@ -28,11 +28,14 @@ class Welcome extends React.PureComponent {
         //dialog.showOpenDialog({ properties: ['openFile', 'openDirectory', 'multiSelections'] })
     }
 
-    handleOK = () => {
-        this.props.addInstance(this.props.instance);
+    handleConnect = () => {
+        this.props.connectDB({ name: 'shit', ip: 'localhost', port: 6379, password: 'shit' });
+        this.props.addInstance('localhost');
     }
 
     render() {
+        console.log(this.props.result);
+
         return (
             <Layout>
                 <Content style={{ marginLeft: '200px', overflow: 'initial' }}>
@@ -45,7 +48,8 @@ class Welcome extends React.PureComponent {
                 {
                     this.state.visible &&
                     <div>
-                        <Button onClick={this.props.connectDB}>connect</Button>
+                        <Input />
+                        <Button onClick={this.handleConnect}>connect</Button>
                     </div>
                 }
 
@@ -56,26 +60,18 @@ class Welcome extends React.PureComponent {
         )
     }
 
-    componentDidUpdate() {
-
+    componentDidMount() {
+        this.props.getSavedInstances();
     }
 }
 
-export default connect(state => {
+function mapStateToProps(state) {
+    console.log(state);
+
     return {
-        connected: state.handleConnection.connected,
-        instance: state.handleConnection.client
-    }
-}, { connectDB, addInstance })(Welcome)
-
-const styles = {
-    sider: {
-        color: 'green',
-        overflow: 'auto',
-        height: '100vh',
-        position: 'fixed',
-        left: 0,
-        border: 'solid 1 silver',
-        background: "black"
+        instances: state.handleInstance.instances || null,
+        result: state.handleConnection.result || null
     }
 }
+
+export default connect(mapStateToProps, { connectDB, getSavedInstances })(Welcome)

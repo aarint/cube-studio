@@ -4,13 +4,13 @@ import { getActiveInstance } from "../../utils/InstanceUtil";
 
 export function* getCurrentInstanceKeys(action) {
     const keys = yield new Promise((resolve, reject) => {
-        getActiveInstance().keys("*", (error, res) => {
-            if (res && res.length > 0) {
-                resolve(res);
-            } else {
-                reject(null);
-            }
-        })
+        // getActiveInstance().keys("*", (error, res) => {
+        //     if (res && res.length > 0) {
+        //         resolve(res);
+        //     } else {
+        //         reject(null);
+        //     }
+        // })
     })
 
     yield put(getAllKeysDone(keys));
@@ -35,7 +35,7 @@ export function* deleteStringByKey() { }
 
 export function* getConfigByKey(action) {
     const value = yield new Promise((resolve, reject) => {
-        getActiveInstance().config("GET", action.key, (error, res) => {
+        getActiveInstance().config("GET", action.key, (err, res) => {            
             if (res && res.length === 2) {
                 resolve(res[1])
             } else {
