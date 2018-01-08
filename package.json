@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/fachilles/cube-studio.git"
   },
-  "license": "Apache-2.0",
+  "license": "MIT",
   "main": "main.js",
   "scripts": {
     "prod": "webpack --config webpack.build.config.js && electron --noDevServer .",
