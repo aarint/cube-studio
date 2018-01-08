@@ -5,10 +5,10 @@
 
 import React from 'react';
 import { connect } from 'react-redux';
-import { Modal, Button, Layout,Input } from 'antd';
+import { Modal, Button, Layout, Input } from 'antd';
 import Instance from './Instance';
-import { connectDB } from '../redux/actions/Connect';
-import { getSavedInstances } from '../redux/actions/Instance';
+import { connectDB } from '../redux/thunk/Connect';
+import { getAllSavedInstances } from '../redux/thunk/Instance';
 
 const { Content, Sider } = Layout;
 
@@ -29,13 +29,12 @@ class Welcome extends React.PureComponent {
     }
 
     handleConnect = () => {
-        this.props.connectDB({ name: 'shit', ip: 'localhost', port: 6379, password: 'shit' });
-        this.props.addInstance('localhost');
+        this.props.connectDB({ name: 'shit', ip: 'localhost', port: 6379, password: 'shit' }).then(res => {
+            this.props.addInstance('localhost');
+        });
     }
 
     render() {
-        console.log(this.props.result);
-
         return (
             <Layout>
                 <Content style={{ marginLeft: '200px', overflow: 'initial' }}>
@@ -52,26 +51,20 @@ class Welcome extends React.PureComponent {
                         <Button onClick={this.handleConnect}>connect</Button>
                     </div>
                 }
-
-                {
-
-                }
             </Layout>
         )
     }
 
     componentDidMount() {
-        this.props.getSavedInstances();
+        this.props.getAllSavedInstances();
     }
 }
 
 function mapStateToProps(state) {
-    console.log(state);
-
     return {
         instances: state.handleInstance.instances || null,
         result: state.handleConnection.result || null
     }
 }
 
-export default connect(mapStateToProps, { connectDB, getSavedInstances })(Welcome)
+export default connect(mapStateToProps, { connectDB, getAllSavedInstances })(Welcome)

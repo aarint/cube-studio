@@ -5,9 +5,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Button, Layout, Tree, notification, List, Select } from 'antd';
-import { connectDB, connectDBDone } from '../redux/actions/Connect';
-import { addInstance, getInstance } from '../redux/actions/Instance';
-import { doingString, getAllKeys, getConfig, setConfig, getKeyValue } from '../redux/actions/Redis';
+import { addInstance, getInstance } from '../redux/thunk/Instance';
+import { getCurrentInstanceKeys, getConfigByKey, setConfig, getObjectByKey } from '../redux/thunk/Redis';
 
 const { Content, Sider } = Layout;
 const TreeNode = Tree.TreeNode;
@@ -54,7 +53,7 @@ class Instance extends React.PureComponent {
 
         let options = [];
         for (let i = 1; i <= parseInt(config.value); i++) {
-            options.push(<Option key={`${i}`} value={`${i}`}>{`DB${i}`}</Option>)
+            options.push(<Option key={`${i}`} value={`DB${i}`}>{`DB${i}`}</Option>)
         }
 
         return options;
@@ -77,34 +76,24 @@ class Instance extends React.PureComponent {
 
     onSelectKey = (key) => {
         this.setState({ currentKey: key });
-        this.props.getKeyValue(key);
+        this.props.getObjectByKey(key);
     }
 
     onSelectNode = (keys, info) => {
         console.log(keys, info);
     }
 
-
-
     render() {
         const { currentKey } = this.state;
         const { instance, keys, config, obj } = this.props;
 
-        console.log(obj);
-
         return (
             <Layout>
                 <Sider style={styles.sider}>
-                    <Select style={{ width: '100%' }} >
+                    <Select style={{ width: '100%' }} defaultValue="DB1">
                         {this.constructOptions()}
                     </Select>
-                    <Tree defaultExpandAll={true}
-                        onSelect={this.onSelectNode}>
-                        <TreeNode title="Redis" key="0">
-                            {this.constructDBTree()}
-                        </TreeNode>
-                    </Tree>
-                    <ul style={{background:'green'}}>
+                    <ul style={{ background: 'green' }}>
                         {this.constructKeys()}
                     </ul>
                 </Sider>
@@ -114,9 +103,10 @@ class Instance extends React.PureComponent {
                         <Button type="primary" onClick={() => this.getStr()}>Get a string.</Button>
                     </div>
                     <div style={{ width: 200, background: 'blue' }}>
-                        <ul>{this.constructKeys()}</ul>
+
                     </div>
-                    <div style={{ width: 300, background: 'green' }}>
+                    <div style={{ width: 300 }}>
+                        <div> {obj && obj.type} </div>
                         <div> {obj && obj.value} </div>
                     </div>
                 </Content>
@@ -125,14 +115,12 @@ class Instance extends React.PureComponent {
     }
 
     componentDidMount() {
-        this.props.getConfig("databases");
-        this.props.getAllKeys();
+        this.props.getConfigByKey("databases");
+        this.props.getCurrentInstanceKeys();
     }
 }
 
 function mapStateToProps(state) {
-    console.log(state);
-
     return {
         obj: state.handleRedis.obj || null,
         config: state.handleRedis.config || null,
@@ -141,11 +129,10 @@ function mapStateToProps(state) {
     }
 }
 
-export default connect(mapStateToProps, { getConfig, setConfig, getAllKeys, getKeyValue })(Instance);
+export default connect(mapStateToProps, { getConfigByKey, setConfig, getCurrentInstanceKeys, getObjectByKey })(Instance);
 
 const styles = {
     sider: {
-        color: 'green',
         overflow: 'auto',
         height: '100vh',
         position: 'fixed',

@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 import { Provider } from 'react-redux';
-import store from './redux/store';
+import configureStore from './redux/store';
 import Main from './components/Main';
 import './App.css';
+
+const store = configureStore();
 
 export default class App extends Component {
   render() {

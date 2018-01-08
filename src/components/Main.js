@@ -8,7 +8,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Tabs } from 'antd';
-import { connectDB, connectDBDone } from '../redux/actions/Connect';
+import { connectDB } from '../redux/thunk/Connect';
 import { addInstance, getInstance, getConfig } from '../redux/actions/Instance';
 import Welcome from './Welcome';
 import Instance from './Instance';

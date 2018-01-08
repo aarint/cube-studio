@@ -8,8 +8,8 @@ export function getActiveInstance() {
 
 export function addConnectedInstance(config, instance) {
     try {
-        connectedInstances.push(instance);
         activeInstance = { config, instance };
+        connectedInstances.push(instance);
     } catch (ex) {
         console.log('Wrong with adding aninstance');
     }

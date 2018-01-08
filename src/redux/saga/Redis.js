@@ -3,15 +3,19 @@ import { addString, getString, getAllKeysDone, getConfigDone, setConfigDone, get
 import { getActiveInstance } from "../../utils/InstanceUtil";
 
 export function* getCurrentInstanceKeys(action) {
+    console.log(getActiveInstance());
+    
     const keys = yield new Promise((resolve, reject) => {
-        // getActiveInstance().keys("*", (error, res) => {
-        //     if (res && res.length > 0) {
-        //         resolve(res);
-        //     } else {
-        //         reject(null);
-        //     }
-        // })
+        getActiveInstance().keys("*", (error, res) => {
+            if (res && res.length > 0) {
+                resolve(res);
+            } else {
+                reject(null);
+            }
+        })
     })
+
+    console.log(keys);
 
     yield put(getAllKeysDone(keys));
 }
