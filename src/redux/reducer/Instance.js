@@ -9,7 +9,7 @@ export function handleInstance(state = {}, action) {
         case INSTANCE_DELETE:
             return state;
         case INSTANCES_SAVED_GET_DONE:
-            return Object.assign({}, state, action.instances)
+            return Object.assign({}, state, { instances: action.instances });
         default:
             return state;
     }

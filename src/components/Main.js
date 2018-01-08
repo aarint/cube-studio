@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { connect } from 'react-redux';
-import { Tabs } from 'antd';
+import { Tabs, Icon } from 'antd';
 import { connectDB } from '../redux/thunk/Connect';
 import { addInstance, getInstance, getConfig } from '../redux/actions/Instance';
 import Welcome from './Welcome';
@@ -20,7 +20,7 @@ class Main extends React.PureComponent {
         super(props);
         this.newTabIndex = 0;
         const panes = [
-            { title: 'Welcome', content: <Welcome addInstance={this.add.bind(this)} />, key: '1', closable: false },
+            { title: <Icon type='home' />, content: <Welcome addInstance={this.add.bind(this)} />, key: '1', closable: false },
             // { title: '10.2.1.128', content: <Instance />, key: '2' }
         ];
         this.state = {

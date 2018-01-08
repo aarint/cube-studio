@@ -97,17 +97,20 @@ class Instance extends React.PureComponent {
                         {this.constructKeys()}
                     </ul>
                 </Sider>
-                <Content style={{ marginLeft: '200px', overflow: 'initial' }}>
-                    <div>
-                        <Button type="primary" onClick={() => this.addStr()}>Add a string.</Button>
-                        <Button type="primary" onClick={() => this.getStr()}>Get a string.</Button>
+                <Content style={{ marginLeft: '200px', minHeight: '100%' }}>
+                    <div style={styles.topBar}>
+                        <div style={{ float: 'left' }}> {obj && obj.type} </div>
+                        <Select style={{ width: 90, float: 'right' }}>
+                            <Option key='0'>RAW</Option>
+                            <Option key='1'>JSON</Option>
+                        </Select>
                     </div>
-                    <div style={{ width: 200, background: 'blue' }}>
-
+                    <div style={{ width: '100%', minHeight: '100%', position: 'relative' }}>
+                        <textarea style={{ width: '100%' }}>{obj && obj.value}</textarea>
                     </div>
-                    <div style={{ width: 300 }}>
-                        <div> {obj && obj.type} </div>
-                        <div> {obj && obj.value} </div>
+                    <div style={styles.topBar}>
+                        <Button type="primary" onClick={() => this.addStr()}>Delete</Button>
+                        <Button type="primary" onClick={() => this.getStr()}>Update</Button>
                     </div>
                 </Content>
             </Layout>
@@ -132,6 +135,11 @@ function mapStateToProps(state) {
 export default connect(mapStateToProps, { getConfigByKey, setConfig, getCurrentInstanceKeys, getObjectByKey })(Instance);
 
 const styles = {
+    topBar: {
+        width: '100%',
+        height: '32px',
+        background: 'yellow'
+    },
     sider: {
         overflow: 'auto',
         height: '100vh',

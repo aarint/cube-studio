@@ -10,6 +10,7 @@ export function addConnectedInstance(config, instance) {
     try {
         activeInstance = { config, instance };
         connectedInstances.push(instance);
+        savedInstances.push(config);
     } catch (ex) {
         console.log('Wrong with adding aninstance');
     }
