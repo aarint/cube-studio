@@ -9,10 +9,12 @@ Cube Studio
 
 Cube Studio is a graphical user interface (GUI) tool for Redis & Memcached. 
 It allows you to browse your databases and create, update, delete the data.
+It's built on the Electron, React, Ant Design(temporary).
                     
 ## Features
-* Support Redis & Memcached.
+* Support Redis & Memcached. It will support more nosql database, maybe include the cloud database.
 * Create, update and delete the key value.
+* Show data with raw or json format.
 
 ## Installation
 

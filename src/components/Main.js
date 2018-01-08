@@ -13,6 +13,8 @@ import { addInstance, getInstance, getConfig } from '../redux/actions/Instance';
 import Welcome from './Welcome';
 import Instance from './Instance';
 
+import '../res/css/index.css';
+
 const TabPane = Tabs.TabPane;
 
 class Main extends React.PureComponent {
@@ -68,7 +70,7 @@ class Main extends React.PureComponent {
         const { panes } = this.state;
 
         return (
-            <div>
+            <div style={{ height: '100%' }}>
                 <Tabs
                     style={{ marginBottom: 0 }}
                     hideAdd
@@ -83,12 +85,13 @@ class Main extends React.PureComponent {
                             </TabPane>)
                     }
                 </Tabs>
+                <footer className="toolbar toolbar-footer">
+                    <h1 className="title">Footer</h1>
+                </footer>
             </div>
         );
     }
 }
-
-
 
 export default connect(state => {
     return {

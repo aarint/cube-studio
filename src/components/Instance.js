@@ -24,11 +24,6 @@ class Instance extends React.PureComponent {
         this.curInstance = this.props.curInstance;
     }
 
-    getStr() {
-        //this.props.getString('test');
-        //notification.open({ message: "Get a string!!!" });
-    }
-
     constructDBTree() {
         const { config } = this.props;
 
@@ -68,7 +63,7 @@ class Instance extends React.PureComponent {
 
         let items = [];
         for (let i = 0; i < keys.length; i++) {
-            items.push(<li key={`${i}`} onClick={() => this.onSelectKey(`${keys[i]}`)}><span></span><span>{`${keys[i]}`}</span></li>)
+            items.push(<li style={styles.key} key={`${i}`} onClick={() => this.onSelectKey(`${keys[i]}`)}><span></span><span>{`${keys[i]}`}</span></li>)
         }
 
         return items;
@@ -88,16 +83,17 @@ class Instance extends React.PureComponent {
         const { instance, keys, config, obj } = this.props;
 
         return (
-            <Layout>
+            <Layout style={styles.container}>
                 <Sider style={styles.sider}>
+                    <div style={{ height: 30, paddingLeft: 10 }}>Redis DB</div>
                     <Select style={{ width: '100%' }} defaultValue="DB1">
                         {this.constructOptions()}
                     </Select>
-                    <ul style={{ background: 'green' }}>
+                    <ul>
                         {this.constructKeys()}
                     </ul>
                 </Sider>
-                <Content style={{ marginLeft: '200px', minHeight: '100%' }}>
+                <Content>
                     <div style={styles.topBar}>
                         <div style={{ float: 'left' }}> {obj && obj.type} </div>
                         <Select style={{ width: 90, float: 'right' }}>
@@ -105,7 +101,7 @@ class Instance extends React.PureComponent {
                             <Option key='1'>JSON</Option>
                         </Select>
                     </div>
-                    <div style={{ width: '100%', minHeight: '100%', position: 'relative' }}>
+                    <div style={{ width: '100%', }}>
                         <textarea style={{ width: '100%' }}>{obj && obj.value}</textarea>
                     </div>
                     <div style={styles.topBar}>
@@ -135,17 +131,22 @@ function mapStateToProps(state) {
 export default connect(mapStateToProps, { getConfigByKey, setConfig, getCurrentInstanceKeys, getObjectByKey })(Instance);
 
 const styles = {
+    container: {
+        overflow: 'hidden',
+        width: '100%'
+    },
     topBar: {
         width: '100%',
-        height: '32px',
-        background: 'yellow'
+        height: '32px'
     },
     sider: {
         overflow: 'auto',
-        height: '100vh',
-        position: 'fixed',
         left: 0,
         border: 'solid 1 silver',
         background: "white"
+    },
+    key: {
+        borderBottom: 'solid 1px silver',
+        listStyleType: 'none'
     }
 }
