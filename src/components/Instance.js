@@ -8,14 +8,28 @@ import { Button, Layout, Tree, notification, List, Select } from 'antd';
 import { addInstance, getInstance } from '../redux/thunk/Instance';
 import { getCurrentInstanceKeys, getConfigByKey, setConfig, getObjectByKey } from '../redux/thunk/Redis';
 
+require('json-editor');
+
 const { Content, Sider } = Layout;
 const TreeNode = Tree.TreeNode;
 const Option = Select.Option;
 
+function isJSON(str) {
+    if (typeof str === "string") {
+        try {
+            JSON.parse(str);
+            return true;
+        } catch (ex) {
+            return false;
+        }
+    }
+}
+
 class Instance extends React.PureComponent {
     state = {
         currentKey: null,
-        currentValue: null
+        currentValue: null,
+        viewer: 'RAW'
     }
 
     constructor(props) {
@@ -40,7 +54,7 @@ class Instance extends React.PureComponent {
     }
 
     constructOptions() {
-        const { config } = this.props;
+        const { config, obj } = this.props;
 
         if (!config) {
             return;
@@ -78,8 +92,20 @@ class Instance extends React.PureComponent {
         console.log(keys, info);
     }
 
+    onChangeViewer = (value) => {
+        this.setState({ viewer: value })
+    }
+
+    constructJSONOption = (obj) => {
+        if (obj && obj.value && isJSON(obj.value)) {
+            return <Option key='JSON'>JSON</Option>
+        }
+
+        return <Option key='JSON' disabled>JSON</Option>
+    }
+
     render() {
-        const { currentKey } = this.state;
+        const { currentKey, viewer } = this.state;
         const { instance, keys, config, obj } = this.props;
 
         return (
@@ -96,13 +122,25 @@ class Instance extends React.PureComponent {
                 <Content>
                     <div style={styles.topBar}>
                         <div style={{ float: 'left' }}> {obj && obj.type} </div>
-                        <Select style={{ width: 90, float: 'right' }}>
-                            <Option key='0'>RAW</Option>
-                            <Option key='1'>JSON</Option>
+                        <Select style={{ width: 90, float: 'right' }} defaultValue={"RAW"} onChange={this.onChangeViewer}>
+                            <Option key='RAW'>RAW</Option>
+                            {
+                                this.constructJSONOption(obj)
+                            }
+
                         </Select>
                     </div>
-                    <div style={{ width: '100%', }}>
-                        <textarea style={{ width: '100%' }}>{obj && obj.value}</textarea>
+                    <div style={{ width: '100%', height: '100%' }}>
+                        <div style={{ width: '100%', height: '300px' }}>
+                            {viewer === "RAW" && obj && obj.value}
+
+                            {
+                                viewer === "JSON" && (
+                                    <pre>{obj && obj.value && (JSON.stringify(JSON.parse(obj.value), null, 2))}</pre>
+                                )
+                            }
+
+                        </div>
                     </div>
                     <div style={styles.topBar}>
                         <Button type="primary" onClick={() => this.addStr()}>Delete</Button>
