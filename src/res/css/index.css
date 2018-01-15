@@ -41,3 +41,11 @@ li {
     border-top: 1px solid #c2c0c2;
     -webkit-app-region: drag;
 }
+
+.toolbar .title {
+    font-size: 14px;
+    width: 100px;
+    margin-right: 10px;
+    float: right;
+    text-align: right;
+}

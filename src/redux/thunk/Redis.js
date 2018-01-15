@@ -1,4 +1,4 @@
-import { getAllKeysDone, getConfigDone, setConfigDone, getAllKeys, getConfig, getKeyValue, getKeyValueDone } from "../actions/Redis";
+import { getAllKeysDone, getConfigDone, setConfigDone, getAllKeys, getConfig, getKeyValue, getKeyValueDone, changeDB, changeDBDone } from "../actions/Redis";
 import { getActiveInstance } from "../../utils/InstanceUtil";
 
 export function getCurrentInstanceKeys() {
@@ -47,6 +47,18 @@ export function getObjectByKey(key) {
                     }
                 })
             }
+        })
+    }
+}
+
+export function changeDataBase(key) {
+    return dispatch => {
+        dispatch(changeDB(key));
+        getActiveInstance().select(key, () => {
+            getActiveInstance().keys("*", (error, res) => {
+                dispatch(changeDBDone(key));
+                dispatch(getAllKeysDone(res));
+            })
         })
     }
 }

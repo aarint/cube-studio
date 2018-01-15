@@ -62,17 +62,13 @@ class Main extends React.PureComponent {
         this.setState({ panes, activeKey });
     }
 
-    componentDidUpdate() {
-        //this.props.connected && this.add();
-    }
-
     render() {
         const { panes } = this.state;
 
         return (
-            <div style={{ height: '100%' }}>
+            <div>
                 <Tabs
-                    style={{ marginBottom: 0 }}
+                    style={{ position: 'absolute', width: '100%', top: 0, bottom: 22}}
                     hideAdd
                     onChange={this.onChange}
                     activeKey={this.state.activeKey}
@@ -86,7 +82,7 @@ class Main extends React.PureComponent {
                     }
                 </Tabs>
                 <footer className="toolbar toolbar-footer">
-                    <h1 className="title">Footer</h1>
+                    <div className="title"><span>UTF-8</span>&nbsp;<Icon type="smile" /></div>
                 </footer>
             </div>
         );

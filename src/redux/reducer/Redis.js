@@ -1,4 +1,4 @@
-import { STRING_ADD, STRING_DELETE, CONFIG_GET_DONE, CONFIG_SET_DONE, KEYS_GET_DONE, KEY_VALUE_GET_DONE } from '../actions/Redis';
+import { STRING_ADD, STRING_DELETE, CONFIG_GET_DONE, CONFIG_SET_DONE, KEYS_GET_DONE, KEY_VALUE_GET_DONE, CHANGE_DB, CHANGE_DB_DONE } from '../actions/Redis';
 
 export function handleRedis(state = {}, action) {
     switch (action.type) {
@@ -14,6 +14,10 @@ export function handleRedis(state = {}, action) {
             return Object.assign({}, state, { config: action.config });
         case CONFIG_SET_DONE:
             return Object.assign({}, state, { config: action.config });
+        case CHANGE_DB:
+            return Object.assign({}, state, { isChanging: true })
+        case CHANGE_DB_DONE:
+            return Object.assign({}, state, { isChanging: false, db: action.db });
         default:
             return state;
     }

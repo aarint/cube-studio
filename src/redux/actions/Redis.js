@@ -14,6 +14,9 @@ export const CONFIG_GET_DONE = "CONFIG_GET_DONE";
 export const CONFIG_SET = "CONFIG_SET";
 export const CONFIG_SET_DONE = "CONFIG_SET_DONE";
 
+export const CHANGE_DB = "CHNAGE_DB";
+export const CHANGE_DB_DONE = "CHANGE_DB_DONE";
+
 export function doingString() {
     return {
         type: STRING_DOING
@@ -89,5 +92,19 @@ export function getKeyValueDone(obj) {
     return {
         type: KEY_VALUE_GET_DONE,
         obj
+    }
+}
+
+export function changeDB(db) {
+    return {
+        type: CHANGE_DB,
+        db
+    }
+}
+
+export function changeDBDone(db) {
+    return {
+        type: CHANGE_DB_DONE,
+        db
     }
 }

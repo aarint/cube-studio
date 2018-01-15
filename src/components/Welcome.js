@@ -17,7 +17,7 @@ class Welcome extends React.PureComponent {
     state = {
         connectionName: '',
         visible: false,
-        ip: 'localhost',
+        ip: '10.2.1.128',
         port: 6937
     }
 
