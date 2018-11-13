@@ -1,10 +1,7 @@
 'use strict';
 
 // Import parts of electron to use
-const {
-  app,
-  BrowserWindow
-} = require('electron');
+const { app, BrowserWindow } = require('electron');
 const path = require('path')
 const url = require('url')
 
