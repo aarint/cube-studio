@@ -68,7 +68,7 @@ class Main extends React.PureComponent {
         return (
             <div>
                 <Tabs
-                    style={{ position: 'absolute', width: '100%', top: 0, bottom: 22}}
+                    style={{ position: 'absolute', width: '100%', top: 0, bottom: 22 }}
                     hideAdd
                     onChange={this.onChange}
                     activeKey={this.state.activeKey}
