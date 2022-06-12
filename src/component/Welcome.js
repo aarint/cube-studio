@@ -15,10 +15,10 @@ const { Content, Sider } = Layout;
 class Welcome extends React.PureComponent {
 
     state = {
-        connectionName: '',
+        alias: '',
         visible: false,
-        ip: '10.2.1.128',
-        port: 6937
+        ip: '127.0.0.1',
+        port: 6379
     }
 
     /**
@@ -32,9 +32,9 @@ class Welcome extends React.PureComponent {
     }
 
     handleConnect = () => {
-        const { ip, port, connectionName } = this.state;
+        const { ip, port, alias } = this.state;
 
-        this.props.connectDB({ name: connectionName, ip: ip, port: 6379, password: 'shit' }).then(res => {
+        this.props.connectDB({ name: alias, ip: ip, port: 6379, password: 'shit' }).then(res => {
             this.props.getAllSavedInstances();
             this.setState({ visible: false });
             this.props.addInstance(ip);
@@ -46,11 +46,11 @@ class Welcome extends React.PureComponent {
     }
 
     onChangeConnectionName = (e) => {
-        this.setState({ connectionName: e.target.value });
+        this.setState({ alias: e.target.value });
     }
 
     onChangeIP = (e) => {
-        this.setState({ ip: e.target.value });
+        this.setState({ ip: e.target.value, alias: e.target.value });
     }
 
     onChangePort = (e) => {
@@ -75,7 +75,7 @@ class Welcome extends React.PureComponent {
     }
 
     render() {
-        const { ip, port, connectionName } = this.state;
+        const { ip, port, alias } = this.state;
         const { instances } = this.props;
 
         return (
@@ -98,7 +98,7 @@ class Welcome extends React.PureComponent {
                     visible={this.state.visible}
                     onOk={this.handleConnect}
                     onCancel={this.onCancelConnect}>
-                    <div><div style={{ width: 150 }}>Connection Name:</div><Input style={{ width: 300 }} value={connectionName} onChange={this.onChangeIP} /></div>
+                    <div><div style={{ width: 150 }}>Connection Name:</div><Input style={{ width: 300 }} value={alias} onChange={this.onChangeConnectionName} /></div>
                     <div><div style={{ width: 150 }}>Hostname:</div><Input style={{ width: 300 }} value={ip} onChange={this.onChangeIP} /></div>
                     <div><div style={{ width: 150 }}>Port:</div><Input style={{ width: 300 }} value={port} onChange={this.onChangePort} /></div>
                 </Modal>

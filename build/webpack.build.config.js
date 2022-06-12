@@ -1,7 +1,8 @@
 const webpack = require('webpack');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { spawn } = require('child_process');
+const BabiliPlugin = require('babili-webpack-plugin');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 // Config directories
 const SRC_DIR = path.resolve(__dirname, 'src');
@@ -14,27 +15,17 @@ module.exports = {
   entry: SRC_DIR + '/index.js',
   output: {
     path: OUTPUT_DIR,
-    publicPath: '/',
+    publicPath: './',
     filename: 'bundle.js'
-  },
-  externals: {
-    'electron': 'require("electron")',
-    'redis': 'require("redis")',
-    'net': 'require("net")',
-    'remote': 'require("remote")',
-    'shell': 'require("shell")',
-    'app': 'require("app")',
-    'ipc': 'require("ipc")',
-    'fs': 'require("fs")',
-    'buffer': 'require("buffer")',
-    'system': '{}',
-    'file': '{}'
   },
   module: {
     rules: [
       {
         test: /\.css$/,
-        use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
+        use: ExtractTextPlugin.extract({
+          fallback: 'style-loader',
+          use: 'css-loader'
+        }),
         include: defaultInclude
       },
       {
@@ -55,28 +46,23 @@ module.exports = {
     ]
   },
   target: 'electron-renderer',
+  resolve: {
+    alias: {
+        '@': paths.src
+    }
+  },
   plugins: [
     new HtmlWebpackPlugin(),
+    new ExtractTextPlugin('bundle.css'),
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify('development')
-    })
+      'process.env.NODE_ENV': JSON.stringify('production')
+    }),
+    new BabiliPlugin()
   ],
-  devtool: 'cheap-source-map',
-  devServer: {
-    contentBase: OUTPUT_DIR,
-    stats: {
-      colors: true,
-      chunks: false,
-      children: false
-    },
-    setup() {
-      spawn(
-        'electron',
-        ['.'],
-        { shell: true, env: process.env, stdio: 'inherit' }
-      )
-      .on('close', code => process.exit(0))
-      .on('error', spawnError => console.error(spawnError));
-    }
+  stats: {
+    colors: true,
+    children: false,
+    chunks: false,
+    modules: false
   }
 };
