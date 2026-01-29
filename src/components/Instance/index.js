@@ -4,8 +4,8 @@
 
 import React from 'react';
 import { connect } from 'react-redux';
-import { Button, Layout, Tree, notification, List, Select, Modal, Input, Popconfirm } from 'antd';
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { Button, Layout, Tree, notification, List, Select, Modal, Input, Popconfirm, Tooltip } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getCurrentInstanceKeys, getConfigByKey, setConfigByKey, getObjectByKey, changeDataBase, setKeyValue, deleteKey } from '../../redux/thunk/Redis';
 
 require('json-editor');
@@ -210,13 +210,6 @@ class Instance extends React.PureComponent {
                             onSelect={this.onSelectDB}
                             options={this.constructOptions()}
                         />
-                        <Button
-                            style={{ marginTop: 10, width: '100%' }}
-                            type="primary"
-                            onClick={this.openAddKeyValue}
-                        >
-                            Add Key/Value
-                        </Button>
                     </div>
                     <div className="instance-keys-list">
                         {this.constructKeys()}
@@ -224,25 +217,33 @@ class Instance extends React.PureComponent {
                 </div>
                 <div className="instance-content">
                     <div className="instance-top-bar">
-                        <div className="instance-actions">
-                            {obj && <span style={{ fontSize: 14 }}>{obj.type}</span>}
-                            <Popconfirm
-                                title="Delete this key?"
-                                okText="Delete"
-                                cancelText="Cancel"
-                                onConfirm={this.onDeleteKey}
-                                disabled={!currentKey}
-                            >
-                                <DeleteOutlined style={{ cursor: currentKey ? 'pointer' : 'not-allowed', color: currentKey ? undefined : '#bbb' }} />
-                            </Popconfirm>
-                            <EditOutlined onClick={this.openEditKeyValue} style={{ cursor: currentKey ? 'pointer' : 'not-allowed', color: currentKey ? undefined : '#bbb' }} />
+                        <div className="instance-actions" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <Select
+                                style={{ width: 90 }}
+                                value={viewer}
+                                onChange={this.onChangeViewer}
+                                options={this.constructJSONOption(obj)}
+                            />
+                            {obj && <span style={{ fontSize: 14, color: '#666' }}>{obj.type}</span>}
+                            <Tooltip title="Add Key/Value">
+                                <Button type="primary" size="small" icon={<PlusOutlined />} onClick={this.openAddKeyValue} />
+                            </Tooltip>
+                            <Tooltip title="Edit">
+                                <Button size="small" icon={<EditOutlined />} onClick={this.openEditKeyValue} disabled={!currentKey} />
+                            </Tooltip>
+                            <Tooltip title="Delete">
+                                <span>
+                                    <Popconfirm
+                                        title="Delete this key?"
+                                        okText="Delete"
+                                        cancelText="Cancel"
+                                        onConfirm={this.onDeleteKey}
+                                    >
+                                        <Button size="small" icon={<DeleteOutlined />} disabled={!currentKey} />
+                                    </Popconfirm>
+                                </span>
+                            </Tooltip>
                         </div>
-                        <Select
-                            style={{ width: 90 }}
-                            value={viewer}
-                            onChange={this.onChangeViewer}
-                            options={this.constructJSONOption(obj)}
-                        />
                     </div>
                     <div className="instance-value-display">
                         <div

@@ -51,10 +51,13 @@ export function getObjectByKey(key) {
             const instance = getActiveInstance();
             const type = await instance.type(key);
             if (type) {
+                // Currently we treat values as string for display.
+                // IMPORTANT: value may be empty string, so always dispatch.
                 const value = await instance.get(key);
-                if (value) {
-                    dispatch(getKeyValueDone({ key: key, value: value, type: type }));
-                }
+                dispatch(getKeyValueDone({ key, value, type }));
+            } else {
+                // Key doesn't exist or type unknown: clear selection value
+                dispatch(getKeyValueDone({ key, value: null, type: null }));
             }
         } catch (error) {
             console.error('Error getting object:', error);
