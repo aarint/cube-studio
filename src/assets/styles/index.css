@@ -156,6 +156,17 @@ li {
     border-bottom: 1px solid #f0f0f0;
 }
 
+.instance-edit-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px 20px 16px;
+    background: #ffffff;
+    border-top: 1px solid #f0f0f0;
+    flex-shrink: 0;
+}
+
 .instance-actions {
     display: flex;
     align-items: center;

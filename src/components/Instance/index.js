@@ -254,32 +254,35 @@ class Instance extends React.PureComponent {
                 </div>
                 <div className="instance-content">
                     <div className="instance-top-bar">
-                        <div className="instance-actions" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <Select
-                                style={{ width: 90 }}
-                                value={viewer}
-                                onChange={this.onChangeViewer}
-                                options={this.constructJSONOption(obj)}
-                            />
-                            {obj && <span style={{ fontSize: 14, color: '#666' }}>{obj.type}</span>}
-                            <Tooltip title="Add Key/Value">
-                                <Button type="primary" size="small" icon={<PlusOutlined />} onClick={this.openAddKeyValue} />
-                            </Tooltip>
-                            <Tooltip title="Edit">
-                                <Button size="small" icon={<EditOutlined />} onClick={this.openEditKeyValue} disabled={!currentKey} />
-                            </Tooltip>
-                            <Tooltip title="Delete">
-                                <span>
-                                    <Popconfirm
-                                        title="Delete this key?"
-                                        okText="Delete"
-                                        cancelText="Cancel"
-                                        onConfirm={this.onDeleteKey}
-                                    >
-                                        <Button size="small" icon={<DeleteOutlined />} disabled={!currentKey} />
-                                    </Popconfirm>
-                                </span>
-                            </Tooltip>
+                        <div className="instance-actions" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <Tooltip title="Add Key/Value">
+                                    <Button type="primary" size="small" icon={<PlusOutlined />} onClick={this.openAddKeyValue} />
+                                </Tooltip>
+                                <Tooltip title="Edit">
+                                    <Button size="small" icon={<EditOutlined />} onClick={this.openEditKeyValue} disabled={!currentKey} />
+                                </Tooltip>
+                                <Tooltip title="Delete">
+                                    <span>
+                                        <Popconfirm
+                                            title="Delete this key?"
+                                            okText="Delete"
+                                            cancelText="Cancel"
+                                            onConfirm={this.onDeleteKey}
+                                        >
+                                            <Button size="small" icon={<DeleteOutlined />} disabled={!currentKey} />
+                                        </Popconfirm>
+                                    </span>
+                                </Tooltip>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <Select
+                                    style={{ width: 90 }}
+                                    value={viewer}
+                                    onChange={this.onChangeViewer}
+                                    options={this.constructJSONOption(obj)}
+                                />
+                            </div>
                         </div>
                     </div>
                     {isEditingValue ? (
@@ -316,7 +319,7 @@ class Instance extends React.PureComponent {
                                     )}
                                 </div>
                             </div>
-                            <div className="instance-edit-bar" style={{ padding: '8px 16px', borderTop: '1px solid #f0f0f0', background: '#fff', display: 'flex', gap: 8 }}>
+                            <div className="instance-edit-bar">
                                 <Button type="primary" size="small" onClick={this.saveEditValue}>Save</Button>
                                 <Button size="small" onClick={this.exitEditValue}>Cancel</Button>
                             </div>
@@ -397,6 +400,17 @@ class Instance extends React.PureComponent {
                 }
             } else if (this.state.currentKey) {
                 this.setState({ currentKey: null });
+            }
+        }
+
+        // Auto-detect JSON format and set viewer accordingly when obj changes
+        if (this.props.obj !== prevProps.obj && this.props.obj && this.props.obj.value !== undefined) {
+            const value = String(this.props.obj.value);
+            const shouldBeJson = isJSON(value);
+            if (shouldBeJson && this.state.viewer !== 'JSON') {
+                this.setState({ viewer: 'JSON' });
+            } else if (!shouldBeJson && this.state.viewer !== 'RAW') {
+                this.setState({ viewer: 'RAW' });
             }
         }
 
