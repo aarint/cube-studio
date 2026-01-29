@@ -1,14 +1,10 @@
-import { createStore, applyMiddleware } from 'redux';
-import thunkMiddleware from 'redux-thunk';
+import { configureStore } from '@reduxjs/toolkit';
 import reducer from '../reducer';
 
-export default function configureStore(initialState) {
-    /* eslint-disable no-underscore-dangle */
-    return createStore(
+export default function configureStoreWrapper(initialState) {
+    return configureStore({
         reducer,
-        initialState,
-        applyMiddleware(thunkMiddleware),
-        window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
-    )
-    /* eslint-enable */
+        preloadedState: initialState,
+        devTools: true,
+    });
 }

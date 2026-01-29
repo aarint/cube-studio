@@ -8,7 +8,7 @@ export const INSTANCES_SAVED_GET_DONE = "INSTANCES_SAVED_GET_DONE";
 export function addInstance(instance) {
     return {
         type: INSTANCE_ADD,
-        instance
+        payload: instance
     }
 }
 
