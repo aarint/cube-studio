@@ -5,10 +5,10 @@
 
 import React from 'react';
 import { connect } from 'react-redux';
-import { Modal, Button, Layout, Input, Icon } from 'antd';
-import Instance from './Instance';
-import { connectDB } from '../redux/thunk/Connect';
-import { getAllSavedInstances } from '../redux/thunk/Instance';
+import { Modal, Button, Layout, Input } from 'antd';
+import { PlusCircleOutlined, HddOutlined, LinkOutlined } from '@ant-design/icons';
+import { connectDB } from '../../redux/thunk/Connect';
+import { addConnectedInstance, getAllSavedInstances } from '../../redux/thunk/Instance';
 
 const { Content, Sider } = Layout;
 
@@ -37,7 +37,6 @@ class Welcome extends React.PureComponent {
         this.props.connectDB({ name: alias, ip: ip, port: 6379, password: 'shit' }).then(res => {
             this.props.getAllSavedInstances();
             this.setState({ visible: false });
-            this.props.addInstance(ip);
         });
     }
 
@@ -67,8 +66,8 @@ class Welcome extends React.PureComponent {
             return (
                 <li key={item.name} style={{ padding: 5, border: 'solid 1px silver', width: 200, height: 100 }}>
                     <div style={{ fontSize: 18 }}>{item.name || item.ip}</div>
-                    <div><Icon type='hdd' />&nbsp;{item.type || 'Redis'}</div>
-                    <div><Icon type='link' />&nbsp;{item.ip}:{item.port}</div>
+                    <div><HddOutlined />&nbsp;{item.type || 'Redis'}</div>
+                    <div><LinkOutlined />&nbsp;{item.ip}:{item.port}</div>
                 </li>
             )
         })
@@ -86,7 +85,7 @@ class Welcome extends React.PureComponent {
                         Cube Studio is a graphical user interface (GUI) tool for Redis & Memcached. It allows you to browse your databases and create, update, delete the data.
                     </div>
                     <div style={{ padding: '10px', background: '#FFFFFF' }}>
-                        Connections:&nbsp;<Icon type='plus-circle-o' style={{ color: '#1890FF', fontSize: 18 }} onClick={this.openConnection} />                    </div>
+                        Connections:&nbsp;<PlusCircleOutlined style={{ color: '#1890FF', fontSize: 18 }} onClick={this.openConnection} />                    </div>
                     <ul style={{ padding: '10px' }}>
                         {this.constructSavedInstances()}
                     </ul>

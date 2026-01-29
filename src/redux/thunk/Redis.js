@@ -2,63 +2,76 @@ import { getAllKeysDone, getConfigDone, setConfigDone, getAllKeys, getConfig, ge
 import { getActiveInstance } from "../../utils/InstanceUtil";
 
 export function getCurrentInstanceKeys() {
-    return dispatch => {
+    return async dispatch => {
         dispatch(getAllKeys());
         try {
-            getActiveInstance().keys("*", (error, res) => {
-                dispatch(getAllKeysDone(res));
-            })
+            const instance = getActiveInstance();
+            const keys = await instance.keys('*');
+            dispatch(getAllKeysDone(keys));
         } catch (ex) {
-
+            console.error('Error getting keys:', ex);
         }
     }
 }
 
 export function getConfigByKey(config) {
-    return dispatch => {
-        dispatch(getConfig())
+    return async dispatch => {
+        dispatch(getConfig());
         try {
-            getActiveInstance().config("GET", config, (err, res) => {
-                if (res && res.length === 2) {
-                    dispatch(getConfigDone({ key: config, value: res[1] }))
-                }
-            });
+            const instance = getActiveInstance();
+            const res = await instance.config('GET', config);
+            if (res && res.length === 2) {
+                dispatch(getConfigDone({ key: config, value: res[1] }));
+            }
         } catch (ex) {
-            console.log(ex);
+            console.error('Error getting config:', ex);
         }
     }
 }
 
 export function setConfigByKey(action) {
     const { key, value } = action.config;
-    //yield getActiveInstance().config("SET", key, value, (error, res) => {
-    //    put(setConfigDone({ key: action.key, value: res }));
-    //});
+    return async dispatch => {
+        try {
+            const instance = getActiveInstance();
+            await instance.config('SET', key, value);
+            dispatch(setConfigDone({ key: action.key, value: value }));
+        } catch (error) {
+            console.error('Error setting config:', error);
+        }
+    };
 }
 
 export function getObjectByKey(key) {
-    return dispatch => {
+    return async dispatch => {
         dispatch(getKeyValue(key));
-        getActiveInstance().type(key, (error, t) => {
-            if (t) {
-                getActiveInstance().get(key, (err, r) => {
-                    if (r) {
-                        dispatch(getKeyValueDone({ key: key, value: r, type: t }));
-                    }
-                })
+        try {
+            const instance = getActiveInstance();
+            const type = await instance.type(key);
+            if (type) {
+                const value = await instance.get(key);
+                if (value) {
+                    dispatch(getKeyValueDone({ key: key, value: value, type: type }));
+                }
             }
-        })
+        } catch (error) {
+            console.error('Error getting object:', error);
+        }
     }
 }
 
 export function changeDataBase(key) {
-    return dispatch => {
+    return async dispatch => {
         dispatch(changeDB(key));
-        getActiveInstance().select(key, () => {
-            getActiveInstance().keys("*", (error, res) => {
-                dispatch(changeDBDone(key));
-                dispatch(getAllKeysDone(res));
-            })
-        })
+        try {
+            const instance = getActiveInstance();
+            await instance.select(key);
+            const keys = await instance.keys('*');
+            dispatch(changeDBDone(key));
+            dispatch(getAllKeysDone(keys));
+        } catch (error) {
+            console.error('Error changing database:', error);
+        }
     }
 }
+

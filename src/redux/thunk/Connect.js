@@ -1,22 +1,36 @@
-import Redis from 'redis';
+import { createClient } from 'redis';
 import { connectDBDone, connectDBError } from '../actions/Connect';
 import { addConnectedInstance, deleteInstance } from "../../utils/InstanceUtil";
 
 export function connectDB(config) {
-    return dispatch => {
-        return new Promise((resolve, reject) => {
-            let client = Redis.createClient(config.port, config.ip);
+    return async dispatch => {
+        try {
+            const client = createClient({
+                socket: {
+                    host: config.ip,
+                    port: config.port,
+                },
+                password: config.password,
+            });
 
-            client.on('connect', function () {
-                resolve(client);
-                addConnectedInstance(config, client);
-                dispatch(connectDBDone(config));
-            })
+            client.on('error', (err) => {
+                console.error('Redis Client Error:', err);
+                dispatch(connectDBError(err));
+            });
 
             client.on('end', () => {
                 console.log('Client :: end');
             });
-        })
+
+            await client.connect();
+            resolve(client);
+            addConnectedInstance(config, client);
+            dispatch(connectDBDone(config));
+        } catch (error) {
+            console.error('Redis connection error:', error);
+            dispatch(connectDBError(error));
+            throw error;
+        }
     }
 }
 

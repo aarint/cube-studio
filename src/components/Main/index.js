@@ -1,34 +1,32 @@
 /**
- * Main page show the all connections that include saved in storage.
- * Click one will show the DB instance in the opened tab window.
- * 
+ * Main page show all connections that include saved in storage.
+ * Click one will show DB instance in the opened tab window.
+ *
  * @author f.achilles
  */
 
 import React from 'react';
 import { connect } from 'react-redux';
-import { Tabs, Icon } from 'antd';
-import { connectDB } from '../redux/thunk/Connect';
-import { addInstance, getInstance, getConfig } from '../redux/actions/Instance';
-import Welcome from './Welcome';
-import Instance from './Instance';
+import { Tabs } from 'antd';
+import { HomeOutlined, SmileOutlined } from '@ant-design/icons';
+import { connectDB } from '../../redux/thunk/Connect';
+import { addInstance } from '../../redux/actions/Instance';
+import { getAllSavedInstances } from '../../redux/thunk/Instance';
+import Welcome from '../Welcome';
+import Instance from '../Instance';
 
-import '../res/css/index.css';
-
-const TabPane = Tabs.TabPane;
+import '../../assets/styles/index.css';
 
 class Main extends React.PureComponent {
     constructor(props) {
         super(props);
         this.newTabIndex = 0;
         const panes = [
-            { title: <Icon type='home' />, content: <Welcome addInstance={this.add.bind(this)} />, key: '1', closable: false },
-            // { title: '10.2.1.128', content: <Instance />, key: '2' }
+            { title: <HomeOutlined />, content: <Welcome addInstance={this.add.bind(this)} />, key: '1', closable: false },
         ];
         this.state = {
             activeKey: panes[0].key,
             panes,
-            visible: false
         };
     }
 
@@ -65,6 +63,13 @@ class Main extends React.PureComponent {
     render() {
         const { panes } = this.state;
 
+        const items = panes.map(pane => ({
+            key: pane.key,
+            label: pane.title,
+            children: pane.content,
+            closable: pane.closable,
+        }));
+
         return (
             <div>
                 <Tabs
@@ -73,16 +78,11 @@ class Main extends React.PureComponent {
                     onChange={this.onChange}
                     activeKey={this.state.activeKey}
                     type="editable-card"
-                    onEdit={this.onEdit}>
-                    {
-                        panes.map(pane =>
-                            <TabPane tab={pane.title} key={pane.key} closable={pane.closable}>
-                                {pane.content}
-                            </TabPane>)
-                    }
-                </Tabs>
+                    onEdit={this.onEdit}
+                    items={items}
+                />
                 <footer className="toolbar toolbar-footer">
-                    <div className="title"><span>UTF-8</span>&nbsp;<Icon type="smile" /></div>
+                    <div className="title"><span>UTF-8</span>&nbsp;<SmileOutlined /></div>
                 </footer>
             </div>
         );
@@ -93,4 +93,4 @@ export default connect(state => {
     return {
         instance: state.handleConnection.client
     }
-}, { connectDB, addInstance })(Main);
+}, { connectDB, addInstance, getAllSavedInstances })(Main);
