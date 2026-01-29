@@ -16,12 +16,14 @@ export function getCurrentInstanceKeys() {
 
 export function getConfigByKey(config) {
     return async dispatch => {
-        dispatch(getConfig());
+        dispatch(getConfig(config));
         try {
             const instance = getActiveInstance();
-            const res = await instance.config('GET', config);
-            if (res && res.length === 2) {
-                dispatch(getConfigDone({ key: config, value: res[1] }));
+            // redis@4: configGet returns object, e.g. { databases: "16" }
+            const res = await instance.configGet(config);
+            const value = res ? res[config] : undefined;
+            if (value !== undefined) {
+                dispatch(getConfigDone({ key: config, value }));
             }
         } catch (ex) {
             console.error('Error getting config:', ex);
@@ -34,7 +36,7 @@ export function setConfigByKey(action) {
     return async dispatch => {
         try {
             const instance = getActiveInstance();
-            await instance.config('SET', key, value);
+            await instance.configSet({ [key]: value });
             dispatch(setConfigDone({ key: action.key, value: value }));
         } catch (error) {
             console.error('Error setting config:', error);
@@ -56,6 +58,35 @@ export function getObjectByKey(key) {
             }
         } catch (error) {
             console.error('Error getting object:', error);
+        }
+    }
+}
+
+export function setKeyValue(key, value) {
+    return async (dispatch) => {
+        try {
+            const instance = getActiveInstance();
+            await instance.set(key, value);
+            const keys = await instance.keys('*');
+            dispatch(getAllKeysDone(keys));
+            dispatch(getKeyValueDone({ key, value, type: 'string' }));
+        } catch (error) {
+            console.error('Error setting key/value:', error);
+            throw error;
+        }
+    }
+}
+
+export function deleteKey(key) {
+    return async (dispatch) => {
+        try {
+            const instance = getActiveInstance();
+            await instance.del(key);
+            const keys = await instance.keys('*');
+            dispatch(getAllKeysDone(keys));
+        } catch (error) {
+            console.error('Error deleting key:', error);
+            throw error;
         }
     }
 }

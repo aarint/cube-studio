@@ -44,7 +44,7 @@ class MemcachedInstance extends React.PureComponent {
                         <span>{key}</span>
                     </List.Item>
                 )}
-                style={{ border: '1px solid #f0f0f0', borderRadius: 4, height: 'calc(100vh - 200px)', overflowY: 'auto' }}
+                style={{ border: 'none' }}
             />
         );
     }

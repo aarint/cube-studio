@@ -4,9 +4,9 @@
 
 import React from 'react';
 import { connect } from 'react-redux';
-import { Button, Layout, Tree, notification, List, Select, Row, Col } from 'antd';
+import { Button, Layout, Tree, notification, List, Select, Modal, Input, Popconfirm } from 'antd';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { getCurrentInstanceKeys, getConfigByKey, setConfigByKey, getObjectByKey, changeDataBase } from '../../redux/thunk/Redis';
+import { getCurrentInstanceKeys, getConfigByKey, setConfigByKey, getObjectByKey, changeDataBase, setKeyValue, deleteKey } from '../../redux/thunk/Redis';
 
 require('json-editor');
 
@@ -27,7 +27,12 @@ class Instance extends React.PureComponent {
     state = {
         currentKey: null,
         currentValue: null,
-        viewer: 'RAW'
+        viewer: 'RAW',
+        selectedDB: 'DB0',
+        kvModalOpen: false,
+        kvModalMode: 'add', // 'add' | 'edit'
+        kvKeyInput: '',
+        kvValueInput: ''
     }
 
     constructor(props) {
@@ -86,7 +91,7 @@ class Instance extends React.PureComponent {
                         <span>{key}</span>
                     </List.Item>
                 )}
-                style={{ border: '1px solid #f0f0f0', borderRadius: 4, height: 'calc(100vh - 200px)', overflowY: 'auto' }}
+                style={{ border: 'none' }}
             />
         );
     }
@@ -105,8 +110,79 @@ class Instance extends React.PureComponent {
     }
 
     onSelectDB = (value, option) => {
+        this.setState({ selectedDB: value, currentKey: null });
         const db = value.substring(2);
         this.props.changeDataBase(db);
+    }
+
+    openAddKeyValue = () => {
+        this.setState({
+            kvModalOpen: true,
+            kvModalMode: 'add',
+            kvKeyInput: '',
+            kvValueInput: ''
+        });
+    }
+
+    openEditKeyValue = () => {
+        const { obj } = this.props;
+        if (!obj || !obj.key) return;
+        this.setState({
+            kvModalOpen: true,
+            kvModalMode: 'edit',
+            kvKeyInput: obj.key,
+            kvValueInput: obj.value || ''
+        });
+    }
+
+    closeKeyValueModal = () => {
+        this.setState({ kvModalOpen: false });
+    }
+
+    onChangeKVKey = (e) => {
+        this.setState({ kvKeyInput: e.target.value });
+    }
+
+    onChangeKVValue = (e) => {
+        this.setState({ kvValueInput: e.target.value });
+    }
+
+    submitKeyValue = () => {
+        const { kvKeyInput, kvValueInput, kvModalMode } = this.state;
+        const key = (kvKeyInput || '').trim();
+        if (!key) {
+            notification.warning({ message: 'Key is required' });
+            return;
+        }
+
+        return this.props.setKeyValue(key, kvValueInput || '')
+            .then(() => {
+                this.setState({ kvModalOpen: false, currentKey: key });
+                this.props.getObjectByKey(key);
+                notification.success({ message: kvModalMode === 'edit' ? 'Updated' : 'Added' });
+            })
+            .catch((err) => {
+                notification.error({
+                    message: 'Operation failed',
+                    description: (err && (err.message || (err.toString && err.toString()))) || 'Unknown error'
+                });
+            });
+    }
+
+    onDeleteKey = () => {
+        const { currentKey } = this.state;
+        if (!currentKey) return;
+        return this.props.deleteKey(currentKey)
+            .then(() => {
+                notification.success({ message: 'Deleted' });
+                this.setState({ currentKey: null });
+            })
+            .catch((err) => {
+                notification.error({
+                    message: 'Delete failed',
+                    description: (err && (err.message || (err.toString && err.toString()))) || 'Unknown error'
+                });
+            });
     }
 
     constructJSONOption = (obj) => {
@@ -120,45 +196,137 @@ class Instance extends React.PureComponent {
     }
 
     render() {
-        const { currentKey, viewer } = this.state;
+        const { currentKey, viewer, selectedDB, kvModalOpen, kvModalMode, kvKeyInput, kvValueInput } = this.state;
         const { instance, keys, config, obj } = this.props;
 
         return (
-            <Row style={{ position: 'absolute', width: '100%', top: 60, bottom: 22, padding: 10, border: 'solid 1px silver' }}>
-                <Col span={8} style={{ background: 'white', borderRight: 'solid 1px silver' }}>
-                    <div style={{ padding: 16, borderBottom: '1px solid #f0f0f0' }}>
-                        <div style={{ marginBottom: 12, fontWeight: 500 }}>Redis DB</div>
-                        <Select style={{ width: '100%' }} defaultValue="DB0" onSelect={this.onSelectDB} options={this.constructOptions()} />
+            <div className="instance-container">
+                <div className="instance-sidebar">
+                    <div className="instance-sidebar-header">
+                        <div className="instance-sidebar-title">Redis DB</div>
+                        <Select
+                            style={{ width: '100%' }}
+                            value={selectedDB}
+                            onSelect={this.onSelectDB}
+                            options={this.constructOptions()}
+                        />
+                        <Button
+                            style={{ marginTop: 10, width: '100%' }}
+                            type="primary"
+                            onClick={this.openAddKeyValue}
+                        >
+                            Add Key/Value
+                        </Button>
                     </div>
-                    {this.constructKeys()}
-                </Col>
-                <Col span={16}>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fafafa' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#ffffff', borderBottom: '1px solid #f0f0f0' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                {obj && <span style={{ fontSize: 14 }}>{obj.type}</span>}
-                                <DeleteOutlined onClick={() => this.addStr()} />
-                                <EditOutlined onClick={() => this.getStr()} />
-                            </div>
-                            <Select style={{ width: 90 }} defaultValue={"RAW"} onChange={this.onChangeViewer} options={this.constructJSONOption(obj)} />
+                    <div className="instance-keys-list">
+                        {this.constructKeys()}
+                    </div>
+                </div>
+                <div className="instance-content">
+                    <div className="instance-top-bar">
+                        <div className="instance-actions">
+                            {obj && <span style={{ fontSize: 14 }}>{obj.type}</span>}
+                            <Popconfirm
+                                title="Delete this key?"
+                                okText="Delete"
+                                cancelText="Cancel"
+                                onConfirm={this.onDeleteKey}
+                                disabled={!currentKey}
+                            >
+                                <DeleteOutlined style={{ cursor: currentKey ? 'pointer' : 'not-allowed', color: currentKey ? undefined : '#bbb' }} />
+                            </Popconfirm>
+                            <EditOutlined onClick={this.openEditKeyValue} style={{ cursor: currentKey ? 'pointer' : 'not-allowed', color: currentKey ? undefined : '#bbb' }} />
                         </div>
-                        <div style={{ flex: 1, overflow: 'hidden' }}>
-                            <div style={{ height: '100%', padding: 16, overflowY: 'auto', background: 'white', wordBreak: 'break-all', fontFamily: "'Courier New', Courier, monospace", fontSize: 13, lineHeight: 1.5 }}>
-                                {viewer === "RAW" && obj && obj.value}
-                                {viewer === "JSON" && (
-                                    <pre>{obj && obj.value && (JSON.stringify(JSON.parse(obj.value), null, 2))}</pre>
-                                )}
-                            </div>
+                        <Select
+                            style={{ width: 90 }}
+                            value={viewer}
+                            onChange={this.onChangeViewer}
+                            options={this.constructJSONOption(obj)}
+                        />
+                    </div>
+                    <div className="instance-value-display">
+                        <div
+                            className="instance-value-content"
+                            style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: 13, lineHeight: 1.5 }}
+                        >
+                            {!currentKey && (
+                                <div style={{ color: '#999' }}>
+                                    Select a key to view its value
+                                </div>
+                            )}
+                            {currentKey && viewer === "RAW" && obj && obj.value}
+                            {currentKey && viewer === "JSON" && obj && obj.value && (
+                                <pre style={{ margin: 0 }}>{JSON.stringify(JSON.parse(obj.value), null, 2)}</pre>
+                            )}
                         </div>
                     </div>
-                </Col>
-            </Row>
+                </div>
+
+                <Modal
+                    title={kvModalMode === 'edit' ? 'Edit Key/Value' : 'Add Key/Value'}
+                    open={kvModalOpen}
+                    onOk={this.submitKeyValue}
+                    onCancel={this.closeKeyValueModal}
+                    okText={kvModalMode === 'edit' ? 'Update' : 'Add'}
+                >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <div>
+                            <div style={{ marginBottom: 6 }}>Key</div>
+                            <Input
+                                value={kvKeyInput}
+                                onChange={this.onChangeKVKey}
+                                placeholder="Enter key"
+                                disabled={kvModalMode === 'edit'}
+                            />
+                        </div>
+                        <div>
+                            <div style={{ marginBottom: 6 }}>Value</div>
+                            <Input.TextArea
+                                value={kvValueInput}
+                                onChange={this.onChangeKVValue}
+                                autoSize={{ minRows: 3, maxRows: 10 }}
+                                placeholder="Enter value"
+                            />
+                        </div>
+                    </div>
+                </Modal>
+            </div>
         );
     }
 
     componentDidMount() {
         this.props.getConfigByKey("databases");
-        this.props.getCurrentInstanceKeys();
+        // Ensure default DB0 and load keys
+        this.props.changeDataBase(0);
+    }
+
+    componentDidUpdate(prevProps) {
+        // After keys loaded / db switched, default select the first key
+        if (this.props.keys !== prevProps.keys) {
+            const keys = this.props.keys || [];
+            if (keys.length > 0) {
+                const firstKey = keys[0];
+                if (this.state.currentKey !== firstKey) {
+                    this.setState({ currentKey: firstKey });
+                    this.props.getObjectByKey(firstKey);
+                }
+            } else if (this.state.currentKey) {
+                this.setState({ currentKey: null });
+            }
+        }
+
+        // If config (databases count) arrives, ensure DB select is valid and defaults to first
+        if (this.props.config !== prevProps.config) {
+            const total = this.props.config ? parseInt(this.props.config.value) : 0;
+            if (total > 0) {
+                // keep current selection if valid, else reset to DB0
+                const idx = parseInt(String(this.state.selectedDB).replace('DB', ''), 10);
+                if (Number.isNaN(idx) || idx < 0 || idx >= total) {
+                    this.setState({ selectedDB: 'DB0' });
+                    this.props.changeDataBase(0);
+                }
+            }
+        }
     }
 }
 
@@ -176,5 +344,7 @@ function mapStateToProps(state) {
 export default connect(mapStateToProps, {
     getConfigByKey, setConfigByKey,
     getCurrentInstanceKeys, getObjectByKey,
-    changeDataBase
+    changeDataBase,
+    setKeyValue,
+    deleteKey
 })(Instance);

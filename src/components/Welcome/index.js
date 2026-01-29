@@ -58,7 +58,7 @@ class Welcome extends React.PureComponent {
             save
         };
 
-        const connectAction = type === 'Memcache' ? this.props.connectMemcached : this.props.connectDB;
+        const connectAction = type === 'Memcached' ? this.props.connectMemcached : this.props.connectDB;
 
         return connectAction(config)
             .then(() => {
@@ -67,6 +67,10 @@ class Welcome extends React.PureComponent {
                 }
                 this.props.getAllSavedInstances();
                 this.setState({ visible: false });
+                if (typeof this.props.addInstance === 'function') {
+                    const title = config.name || `${config.ip}:${config.port}`;
+                    this.props.addInstance(title, config.type);
+                }
             })
             .catch((err) => {
                 const message =
@@ -91,7 +95,7 @@ class Welcome extends React.PureComponent {
             save
         };
 
-        const testAction = type === 'Memcache' ? this.props.testConnectMemcached : this.props.testConnectDB;
+        const testAction = type === 'Memcached' ? this.props.testConnectMemcached : this.props.testConnectDB;
 
         return testAction(config)
             .then(() => {
@@ -132,7 +136,7 @@ class Welcome extends React.PureComponent {
     }
 
     onChangeType = (value) => {
-        const nextPort = value === 'Memcache' ? 11211 : 6379;
+        const nextPort = value === 'Memcached' ? 11211 : 6379;
         this.setState({ type: value, port: nextPort });
     }
 
@@ -152,13 +156,48 @@ class Welcome extends React.PureComponent {
 
         return instances && instances.map((item) => {
             return (
-                <li key={item.name} style={{ padding: 5, border: 'solid 1px silver', width: 200, height: 100 }}>
+                <li
+                    key={`${item.type || 'Redis'}-${item.name || item.ip}-${item.port}`}
+                    style={{ padding: 5, border: 'solid 1px silver', width: 200, height: 100, cursor: 'pointer' }}
+                    onClick={() => this.handleOpenSaved(item)}
+                >
                     <div style={{ fontSize: 18 }}>{item.name || item.ip}</div>
                     <div><HddOutlined />&nbsp;{item.type || 'Redis'}</div>
                     <div><LinkOutlined />&nbsp;{item.ip}:{item.port}</div>
                 </li>
             )
         })
+    }
+
+    handleOpenSaved = (item) => {
+        if (!item) return;
+        const type = item.type === 'Memcache' ? 'Memcached' : (item.type || 'Redis');
+        const config = {
+            name: item.name,
+            ip: item.ip,
+            port: Number(item.port),
+            password: item.password || '',
+            type,
+            save: true,
+        };
+
+        const connectAction = type === 'Memcached' ? this.props.connectMemcached : this.props.connectDB;
+        return connectAction(config)
+            .then(() => {
+                if (typeof this.props.addInstance === 'function') {
+                    const title = config.name || `${config.ip}:${config.port}`;
+                    this.props.addInstance(title, type);
+                }
+            })
+            .catch((err) => {
+                const message =
+                    (err && (err.message || err.details || (err.toString && err.toString()))) ||
+                    'Unknown connection error';
+                notification.error({
+                    message: 'Connection failed',
+                    description: message
+                });
+            });
     }
 
     render() {
@@ -204,7 +243,7 @@ class Welcome extends React.PureComponent {
                                 onChange={this.onChangeType}
                                 options={[
                                     { value: 'Redis', label: 'Redis' },
-                                    { value: 'Memcache', label: 'Memcache' }
+                                    { value: 'Memcached', label: 'Memcache' }
                                 ]}
                             />
                         </Form.Item>

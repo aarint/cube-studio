@@ -14,6 +14,7 @@ import { addInstance } from '../../redux/actions/Instance';
 import { getAllSavedInstances } from '../../redux/thunk/Instance';
 import Welcome from '../Welcome';
 import Instance from '../Instance';
+import MemcachedInstance from '../MemcachedInstance';
 
 import '../../assets/styles/index.css';
 
@@ -38,10 +39,11 @@ class Main extends React.PureComponent {
         this[action](targetKey);
     }
 
-    add = (title) => {
+    add = (title, type = 'Redis') => {
         const panes = this.state.panes;
         const activeKey = `newTab${this.newTabIndex++}`;
-        panes.push({ title: title, content: <Instance />, key: activeKey });
+        const content = type === 'Memcached' ? <MemcachedInstance /> : <Instance />;
+        panes.push({ title: title, content, key: activeKey });
         this.setState({ panes, activeKey });
     }
 
@@ -73,7 +75,8 @@ class Main extends React.PureComponent {
         return (
             <div>
                 <Tabs
-                    style={{ position: 'absolute', width: '100%', top: 0, bottom: 22 }}
+                    className="main-tabs"
+                    style={{ height: 'calc(100vh - 22px)' }}
                     hideAdd
                     onChange={this.onChange}
                     activeKey={this.state.activeKey}
