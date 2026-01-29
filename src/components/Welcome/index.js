@@ -5,9 +5,10 @@
 
 import React from 'react';
 import { connect } from 'react-redux';
-import { Modal, Button, Layout, Input } from 'antd';
+import { Modal, Button, Layout, Input, Select, notification, Form } from 'antd';
 import { PlusCircleOutlined, HddOutlined, LinkOutlined } from '@ant-design/icons';
-import { connectDB } from '../../redux/thunk/Connect';
+import { connectDB, testConnectDB } from '../../redux/thunk/Connect';
+import { connectMemcached, testConnectMemcached } from '../../redux/thunk/Memcached';
 import { addConnectedInstance, getAllSavedInstances } from '../../redux/thunk/Instance';
 
 const { Content, Sider } = Layout;
@@ -17,8 +18,19 @@ class Welcome extends React.PureComponent {
     state = {
         alias: '',
         visible: false,
+        type: 'Redis',
         ip: '127.0.0.1',
-        port: 6379
+        port: 6379,
+        password: '',
+        isSmall: false
+    }
+
+    updateIsSmall = () => {
+        // Antd md breakpoint is 768px by default
+        const isSmall = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+        if (isSmall !== this.state.isSmall) {
+            this.setState({ isSmall });
+        }
     }
 
     /**
@@ -27,17 +39,68 @@ class Welcome extends React.PureComponent {
      */
     openConnection = () => {
         this.setState({ visible: true })
+        this.updateIsSmall();
 
         //dialog.showOpenDialog({ properties: ['openFile', 'openDirectory', 'multiSelections'] })
     }
 
     handleConnect = () => {
-        const { ip, port, alias } = this.state;
+        const { ip, port, alias, password, type } = this.state;
 
-        this.props.connectDB({ name: alias, ip: ip, port: 6379, password: 'shit' }).then(res => {
-            this.props.getAllSavedInstances();
-            this.setState({ visible: false });
-        });
+        const config = {
+            name: alias,
+            ip,
+            port: Number(port),
+            password,
+            type
+        };
+
+        const connectAction = type === 'Memcache' ? this.props.connectMemcached : this.props.connectDB;
+
+        return connectAction(config)
+            .then(() => {
+                this.props.getAllSavedInstances();
+                this.setState({ visible: false });
+            })
+            .catch((err) => {
+                const message =
+                    (err && (err.message || err.details || err.toString && err.toString())) ||
+                    'Unknown connection error';
+                notification.error({
+                    message: 'Connection failed',
+                    description: message
+                });
+            });
+    }
+
+    handleTest = () => {
+        const { ip, port, password, type } = this.state;
+
+        const config = {
+            ip,
+            port: Number(port),
+            password,
+            type
+        };
+
+        const testAction = type === 'Memcache' ? this.props.testConnectMemcached : this.props.testConnectDB;
+
+        return testAction(config)
+            .then(() => {
+                notification.success({
+                    message: 'Connection OK',
+                    description: `${type} ${ip}:${Number(port)}`
+                });
+            })
+            .catch((err) => {
+                const message =
+                    (err && (err.message || err.details || (err.toString && err.toString()))) ||
+                    'Unknown connection error';
+                notification.error({
+                    message: 'Connection failed',
+                    description: message
+                });
+            });
     }
 
     onCancelConnect = () => {
@@ -54,6 +117,15 @@ class Welcome extends React.PureComponent {
 
     onChangePort = (e) => {
         this.setState({ port: e.target.value });
+    }
+
+    onChangeType = (value) => {
+        const nextPort = value === 'Memcache' ? 11211 : 6379;
+        this.setState({ type: value, port: nextPort });
+    }
+
+    onChangePassword = (e) => {
+        this.setState({ password: e.target.value });
     }
 
     constructSavedInstances = () => {
@@ -74,8 +146,9 @@ class Welcome extends React.PureComponent {
     }
 
     render() {
-        const { ip, port, alias } = this.state;
+        const { ip, port, alias, type, password } = this.state;
         const { instances } = this.props;
+        const { isSmall } = this.state;
 
         return (
             <Layout>
@@ -93,13 +166,42 @@ class Welcome extends React.PureComponent {
 
                 <Modal
                     title={'New Connection'}
-                    style={{ width: 500 }}
+                    width={isSmall ? '92vw' : 520}
                     visible={this.state.visible}
                     onOk={this.handleConnect}
-                    onCancel={this.onCancelConnect}>
-                    <div><div style={{ width: 150 }}>Connection Name:</div><Input style={{ width: 300 }} value={alias} onChange={this.onChangeConnectionName} /></div>
-                    <div><div style={{ width: 150 }}>Hostname:</div><Input style={{ width: 300 }} value={ip} onChange={this.onChangeIP} /></div>
-                    <div><div style={{ width: 150 }}>Port:</div><Input style={{ width: 300 }} value={port} onChange={this.onChangePort} /></div>
+                    onCancel={this.onCancelConnect}
+                    footer={[
+                        <Button key="cancel" onClick={this.onCancelConnect}>Cancel</Button>,
+                        <Button key="test" onClick={this.handleTest}>Test</Button>,
+                        <Button key="ok" type="primary" onClick={this.handleConnect}>Connect</Button>,
+                    ]}>
+                    <Form
+                        layout="vertical"
+                        colon={false}
+                    >
+                        <Form.Item label="Connection Name">
+                            <Input value={alias} onChange={this.onChangeConnectionName} />
+                        </Form.Item>
+                        <Form.Item label="Type">
+                            <Select
+                                value={type}
+                                onChange={this.onChangeType}
+                                options={[
+                                    { value: 'Redis', label: 'Redis' },
+                                    { value: 'Memcache', label: 'Memcache' }
+                                ]}
+                            />
+                        </Form.Item>
+                        <Form.Item label="Hostname">
+                            <Input value={ip} onChange={this.onChangeIP} />
+                        </Form.Item>
+                        <Form.Item label="Port">
+                            <Input value={port} onChange={this.onChangePort} />
+                        </Form.Item>
+                        <Form.Item label="Password">
+                            <Input.Password value={password} onChange={this.onChangePassword} />
+                        </Form.Item>
+                    </Form>
                 </Modal>
             </Layout>
         )
@@ -107,6 +209,16 @@ class Welcome extends React.PureComponent {
 
     componentDidMount() {
         this.props.getAllSavedInstances();
+        this.updateIsSmall();
+        if (typeof window !== 'undefined') {
+            window.addEventListener('resize', this.updateIsSmall);
+        }
+    }
+
+    componentWillUnmount() {
+        if (typeof window !== 'undefined') {
+            window.removeEventListener('resize', this.updateIsSmall);
+        }
     }
 }
 
@@ -117,4 +229,10 @@ function mapStateToProps(state) {
     }
 }
 
-export default connect(mapStateToProps, { connectDB, getAllSavedInstances })(Welcome)
+export default connect(mapStateToProps, {
+    connectDB,
+    testConnectDB,
+    connectMemcached,
+    testConnectMemcached,
+    getAllSavedInstances
+})(Welcome)
