@@ -5,11 +5,12 @@
 
 import React from 'react';
 import { connect } from 'react-redux';
-import { Modal, Button, Layout, Input, Select, notification, Form } from 'antd';
+import { Modal, Button, Layout, Input, Select, notification, Form, Checkbox } from 'antd';
 import { PlusCircleOutlined, HddOutlined, LinkOutlined } from '@ant-design/icons';
 import { connectDB, testConnectDB } from '../../redux/thunk/Connect';
 import { connectMemcached, testConnectMemcached } from '../../redux/thunk/Memcached';
 import { addConnectedInstance, getAllSavedInstances } from '../../redux/thunk/Instance';
+import { upsertSavedInstance } from '../../utils/InstanceUtil';
 
 const { Content, Sider } = Layout;
 
@@ -22,7 +23,8 @@ class Welcome extends React.PureComponent {
         ip: '127.0.0.1',
         port: 6379,
         password: '',
-        isSmall: false
+        isSmall: false,
+        save: true
     }
 
     updateIsSmall = () => {
@@ -45,20 +47,24 @@ class Welcome extends React.PureComponent {
     }
 
     handleConnect = () => {
-        const { ip, port, alias, password, type } = this.state;
+        const { ip, port, alias, password, type, save } = this.state;
 
         const config = {
             name: alias,
             ip,
             port: Number(port),
             password,
-            type
+            type,
+            save
         };
 
         const connectAction = type === 'Memcache' ? this.props.connectMemcached : this.props.connectDB;
 
         return connectAction(config)
             .then(() => {
+                if (save) {
+                    upsertSavedInstance(config);
+                }
                 this.props.getAllSavedInstances();
                 this.setState({ visible: false });
             })
@@ -74,19 +80,25 @@ class Welcome extends React.PureComponent {
     }
 
     handleTest = () => {
-        const { ip, port, password, type } = this.state;
+        const { ip, port, password, type, alias, save } = this.state;
 
         const config = {
+            name: alias,
             ip,
             port: Number(port),
             password,
-            type
+            type,
+            save
         };
 
         const testAction = type === 'Memcache' ? this.props.testConnectMemcached : this.props.testConnectDB;
 
         return testAction(config)
             .then(() => {
+                if (save) {
+                    upsertSavedInstance(config);
+                    this.props.getAllSavedInstances();
+                }
                 notification.success({
                     message: 'Connection OK',
                     description: `${type} ${ip}:${Number(port)}`
@@ -128,6 +140,10 @@ class Welcome extends React.PureComponent {
         this.setState({ password: e.target.value });
     }
 
+    onChangeSave = (e) => {
+        this.setState({ save: e.target.checked });
+    }
+
     constructSavedInstances = () => {
         const { instances } = this.props;
         if (!instances) {
@@ -146,7 +162,7 @@ class Welcome extends React.PureComponent {
     }
 
     render() {
-        const { ip, port, alias, type, password } = this.state;
+        const { ip, port, alias, type, password, save } = this.state;
         const { instances } = this.props;
         const { isSmall } = this.state;
 
@@ -200,6 +216,11 @@ class Welcome extends React.PureComponent {
                         </Form.Item>
                         <Form.Item label="Password">
                             <Input.Password value={password} onChange={this.onChangePassword} />
+                        </Form.Item>
+                        <Form.Item>
+                            <Checkbox checked={save} onChange={this.onChangeSave}>
+                                Save
+                            </Checkbox>
                         </Form.Item>
                     </Form>
                 </Modal>
