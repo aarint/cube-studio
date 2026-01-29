@@ -255,7 +255,9 @@ class Welcome extends React.PureComponent {
                         <Button key="ok" type="primary" onClick={this.handleConnect}>Connect</Button>,
                     ]}>
                     <Form
-                        layout="vertical"
+                        layout={isSmall ? "vertical" : "horizontal"}
+                        labelCol={isSmall ? undefined : { span: 7 }}
+                        wrapperCol={isSmall ? undefined : { span: 17 }}
                         colon={false}
                     >
                         <Form.Item label="Connection Name">
