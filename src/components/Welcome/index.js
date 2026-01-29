@@ -5,14 +5,15 @@
 
 import React from 'react';
 import { connect } from 'react-redux';
-import { Modal, Button, Layout, Input, Select, notification, Form, Checkbox } from 'antd';
+import { Modal, Button, Layout, Input, Select, notification, Form, Checkbox, Card, Row, Col, Typography, Empty } from 'antd';
 import { PlusCircleOutlined, HddOutlined, LinkOutlined } from '@ant-design/icons';
 import { connectDB, testConnectDB } from '../../redux/thunk/Connect';
 import { connectMemcached, testConnectMemcached } from '../../redux/thunk/Memcached';
 import { addConnectedInstance, getAllSavedInstances } from '../../redux/thunk/Instance';
 import { upsertSavedInstance } from '../../utils/InstanceUtil';
 
-const { Content, Sider } = Layout;
+const { Content } = Layout;
+const { Title, Paragraph } = Typography;
 
 class Welcome extends React.PureComponent {
 
@@ -148,25 +149,41 @@ class Welcome extends React.PureComponent {
         this.setState({ save: e.target.checked });
     }
 
-    constructSavedInstances = () => {
+    renderSavedInstances = () => {
         const { instances } = this.props;
-        if (!instances) {
-            return;
+        if (!instances || instances.length === 0) {
+            return (
+                <Empty
+                    className="welcome-empty"
+                    description="No saved connections"
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                >
+                    <Button type="primary" icon={<PlusCircleOutlined />} onClick={this.openConnection}>
+                        Add connection
+                    </Button>
+                </Empty>
+            );
         }
 
-        return instances && instances.map((item) => {
-            return (
-                <li
-                    key={`${item.type || 'Redis'}-${item.name || item.ip}-${item.port}`}
-                    style={{ padding: 5, border: 'solid 1px silver', width: 200, height: 100, cursor: 'pointer' }}
-                    onClick={() => this.handleOpenSaved(item)}
-                >
-                    <div style={{ fontSize: 18 }}>{item.name || item.ip}</div>
-                    <div><HddOutlined />&nbsp;{item.type || 'Redis'}</div>
-                    <div><LinkOutlined />&nbsp;{item.ip}:{item.port}</div>
-                </li>
-            )
-        })
+        return (
+            <Row gutter={[16, 16]}>
+                {instances.map((item) => (
+                    <Col key={`${item.type || 'Redis'}-${item.name || item.ip}-${item.port}`} xs={24} sm={12} md={8} lg={6}>
+                        <Card
+                            className="welcome-connection-card"
+                            hoverable
+                            onClick={() => this.handleOpenSaved(item)}
+                        >
+                            <div className="welcome-card-title">{item.name || item.ip}</div>
+                            <div className="welcome-card-meta">
+                                <span><HddOutlined /> {item.type || 'Redis'}</span>
+                                <span><LinkOutlined /> {item.ip}:{item.port}</span>
+                            </div>
+                        </Card>
+                    </Col>
+                ))}
+            </Row>
+        );
     }
 
     handleOpenSaved = (item) => {
@@ -201,22 +218,29 @@ class Welcome extends React.PureComponent {
     }
 
     render() {
-        const { ip, port, alias, type, password, save } = this.state;
+        const { ip, port, alias, type, password, save, isSmall } = this.state;
         const { instances } = this.props;
-        const { isSmall } = this.state;
 
         return (
-            <Layout>
-                <Content style={{ overflow: 'initial', background: "#FFFFFF" }}>
-                    <div style={{ margin: '10px 50px', textAlign: 'center' }}>
-                        <h1>Welcome to Cube Studio</h1>
-                        Cube Studio is a graphical user interface (GUI) tool for Redis & Memcached. It allows you to browse your databases and create, update, delete the data.
+            <Layout className="welcome-layout">
+                <Content className="welcome-content">
+                    <div className="welcome-hero">
+                        <Title level={2} className="welcome-title">Welcome to Cube Studio</Title>
+                        <Paragraph className="welcome-desc">
+                            A graphical interface for Redis & Memcached. Browse databases and manage keys and values.
+                        </Paragraph>
                     </div>
-                    <div style={{ padding: '10px', background: '#FFFFFF' }}>
-                        Connections:&nbsp;<PlusCircleOutlined style={{ color: '#1890FF', fontSize: 18 }} onClick={this.openConnection} />                    </div>
-                    <ul style={{ padding: '10px' }}>
-                        {this.constructSavedInstances()}
-                    </ul>
+                    <div className="welcome-section">
+                        <div className="welcome-section-header">
+                            <Title level={5} style={{ margin: 0 }}>Connections</Title>
+                            <Button type="primary" icon={<PlusCircleOutlined />} onClick={this.openConnection}>
+                                New connection
+                            </Button>
+                        </div>
+                        <div className="welcome-connections">
+                            {this.renderSavedInstances()}
+                        </div>
+                    </div>
                 </Content>
 
                 <Modal

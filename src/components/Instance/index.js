@@ -32,7 +32,10 @@ class Instance extends React.PureComponent {
         kvModalOpen: false,
         kvModalMode: 'add', // 'add' | 'edit'
         kvKeyInput: '',
-        kvValueInput: ''
+        kvValueInput: '',
+        isEditingValue: false,
+        editDraftValue: '',
+        editValueIsJson: false
     }
 
     constructor(props) {
@@ -97,7 +100,7 @@ class Instance extends React.PureComponent {
     }
 
     onSelectKey = (key) => {
-        this.setState({ currentKey: key });
+        this.setState({ currentKey: key, isEditingValue: false, editDraftValue: '', editValueIsJson: false });
         this.props.getObjectByKey(key);
     }
 
@@ -127,12 +130,46 @@ class Instance extends React.PureComponent {
     openEditKeyValue = () => {
         const { obj } = this.props;
         if (!obj || !obj.key) return;
-        this.setState({
-            kvModalOpen: true,
-            kvModalMode: 'edit',
-            kvKeyInput: obj.key,
-            kvValueInput: obj.value || ''
-        });
+        const raw = String(obj.value ?? '');
+        const valueIsJson = isJSON(raw);
+        const draft = valueIsJson
+            ? JSON.stringify(JSON.parse(raw), null, 2)
+            : raw;
+        this.setState({ isEditingValue: true, editDraftValue: draft, editValueIsJson: valueIsJson });
+    }
+
+    exitEditValue = () => {
+        this.setState({ isEditingValue: false, editDraftValue: '', editValueIsJson: false });
+    }
+
+    onChangeEditDraft = (e) => {
+        this.setState({ editDraftValue: e.target.value });
+    }
+
+    saveEditValue = () => {
+        const { currentKey, editDraftValue, editValueIsJson } = this.state;
+        if (!currentKey) return;
+        let valueToSave = editDraftValue;
+        if (editValueIsJson) {
+            try {
+                valueToSave = JSON.stringify(JSON.parse(editDraftValue));
+            } catch (e) {
+                notification.error({ message: 'Invalid JSON', description: e.message });
+                return;
+            }
+        }
+        return this.props.setKeyValue(currentKey, valueToSave)
+            .then(() => {
+                this.exitEditValue();
+                this.props.getObjectByKey(currentKey);
+                notification.success({ message: 'Saved' });
+            })
+            .catch((err) => {
+                notification.error({
+                    message: 'Save failed',
+                    description: (err && (err.message || (err.toString && err.toString()))) || 'Unknown error'
+                });
+            });
     }
 
     closeKeyValueModal = () => {
@@ -196,7 +233,7 @@ class Instance extends React.PureComponent {
     }
 
     render() {
-        const { currentKey, viewer, selectedDB, kvModalOpen, kvModalMode, kvKeyInput, kvValueInput } = this.state;
+        const { currentKey, viewer, selectedDB, kvModalOpen, kvModalMode, kvKeyInput, kvValueInput, isEditingValue, editDraftValue, editValueIsJson } = this.state;
         const { instance, keys, config, obj } = this.props;
 
         return (
@@ -245,22 +282,69 @@ class Instance extends React.PureComponent {
                             </Tooltip>
                         </div>
                     </div>
-                    <div className="instance-value-display">
-                        <div
-                            className="instance-value-content"
-                            style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: 13, lineHeight: 1.5 }}
-                        >
-                            {!currentKey && (
-                                <div style={{ color: '#999' }}>
-                                    Select a key to view its value
+                    {isEditingValue ? (
+                        <>
+                            <div className="instance-value-display" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                <div style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                    {editValueIsJson ? (
+                                        <Input.TextArea
+                                            value={editDraftValue}
+                                            onChange={this.onChangeEditDraft}
+                                            placeholder='{ }'
+                                            style={{
+                                                flex: 1,
+                                                fontFamily: "'Courier New', Courier, monospace",
+                                                fontSize: 13,
+                                                lineHeight: 1.5,
+                                                minHeight: 120
+                                            }}
+                                            className="instance-json-editor"
+                                        />
+                                    ) : (
+                                        <Input.TextArea
+                                            value={editDraftValue}
+                                            onChange={this.onChangeEditDraft}
+                                            placeholder="Value"
+                                            style={{
+                                                flex: 1,
+                                                fontFamily: "'Courier New', Courier, monospace",
+                                                fontSize: 13,
+                                                lineHeight: 1.5,
+                                                minHeight: 120
+                                            }}
+                                        />
+                                    )}
                                 </div>
-                            )}
-                            {currentKey && viewer === "RAW" && obj && obj.value}
-                            {currentKey && viewer === "JSON" && obj && obj.value && (
-                                <pre style={{ margin: 0 }}>{JSON.stringify(JSON.parse(obj.value), null, 2)}</pre>
-                            )}
+                            </div>
+                            <div className="instance-edit-bar" style={{ padding: '8px 16px', borderTop: '1px solid #f0f0f0', background: '#fff', display: 'flex', gap: 8 }}>
+                                <Button type="primary" size="small" onClick={this.saveEditValue}>Save</Button>
+                                <Button size="small" onClick={this.exitEditValue}>Cancel</Button>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="instance-value-display">
+                            <div
+                                className="instance-value-content"
+                                style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: 13, lineHeight: 1.5 }}
+                            >
+                                {!currentKey && (
+                                    <div style={{ color: '#999' }}>
+                                        Select a key to view its value
+                                    </div>
+                                )}
+                                {currentKey && !isEditingValue && viewer === "RAW" && (obj?.value !== undefined) && (
+                                    <span>{obj.value === '' ? '(empty)' : obj.value}</span>
+                                )}
+                                {currentKey && !isEditingValue && viewer === "JSON" && obj?.value != null && (
+                                    isJSON(obj.value) ? (
+                                        <pre style={{ margin: 0 }}>{JSON.stringify(JSON.parse(obj.value), null, 2)}</pre>
+                                    ) : (
+                                        <span>{obj.value}</span>
+                                    )
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 <Modal

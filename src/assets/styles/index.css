@@ -177,3 +177,138 @@ li {
     padding: 16px;
     word-break: break-all;
 }
+
+/* Welcome page - adaptive width/height and layout */
+.welcome-layout {
+    height: 100%;
+    min-height: 0;
+    background: #f5f5f5;
+}
+
+.welcome-layout .ant-layout-content {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.welcome-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(12px, 2.5vw, 24px);
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+.welcome-hero {
+    flex-shrink: 0;
+    text-align: center;
+    padding: clamp(16px, 3vh, 32px) clamp(12px, 2vw, 24px);
+    margin-bottom: clamp(12px, 2vh, 24px);
+    background: #fff;
+    border-radius: clamp(8px, 1.5vw, 12px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.welcome-title {
+    margin-bottom: 8px !important;
+    font-weight: 600;
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem) !important;
+}
+
+.welcome-desc {
+    color: #666;
+    margin-bottom: 0 !important;
+    font-size: clamp(13px, 1.2vw, 14px);
+    max-width: min(480px, 90vw);
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+.welcome-section {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: clamp(8px, 1.5vw, 12px);
+    padding: clamp(12px, 2vw, 24px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.welcome-section-header {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: clamp(12px, 1.5vh, 20px);
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.welcome-section-header .ant-typography {
+    font-size: clamp(14px, 1.2vw, 16px) !important;
+}
+
+.welcome-section-header .ant-btn {
+    flex-shrink: 0;
+}
+
+.welcome-connections {
+    flex: 1;
+    min-height: 80px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.welcome-connections .ant-row {
+    margin-bottom: 0;
+}
+
+.welcome-connection-card {
+    height: 100%;
+    min-height: 88px;
+}
+
+.welcome-connection-card .ant-card-body {
+    padding: clamp(12px, 1.5vw, 16px);
+}
+
+.welcome-card-title {
+    font-size: clamp(14px, 1.2vw, 16px);
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #262626;
+    word-break: break-word;
+}
+
+.welcome-card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: clamp(12px, 1vw, 13px);
+    color: #8c8c8c;
+}
+
+.welcome-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(24px, 5vh, 48px) 16px;
+    min-height: 160px;
+}
+
+.welcome-empty .ant-empty-description {
+    margin-bottom: 12px;
+}
+
+.welcome-empty .ant-btn {
+    flex-shrink: 0;
+}
