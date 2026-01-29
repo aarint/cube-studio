@@ -35,6 +35,6 @@ export function getSavedInstances() {
 export function getSavedInstancesDone(instances) {
     return {
         type: INSTANCES_SAVED_GET_DONE,
-        instances
+        payload: { instances }
     }
 }

@@ -21,7 +21,7 @@ export function doingString() {
 export function getConfig(config) {
     return {
         type: CONFIG_GET,
-        key
+        key: config
     }
 }
 

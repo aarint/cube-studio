@@ -19,7 +19,11 @@ export function getItem(key) {
         return;
     }
 
-    localStorage.getItem(key);
+    try {
+        return localStorage.getItem(key);
+    } catch (ex) {
+        return null;
+    }
 }
 
 export function removeItem(key) {

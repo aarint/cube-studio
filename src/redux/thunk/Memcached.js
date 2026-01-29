@@ -14,6 +14,34 @@ import { addConnectedInstance, deleteInstance } from "../../utils/InstanceUtil";
 // Singleton instance
 let memcachedClient = null;
 
+export function testConnectMemcached(config) {
+    return async () => {
+        const location = `${config.ip}:${config.port}`;
+        const client = new Memcached(location);
+
+        try {
+            await new Promise((resolve, reject) => {
+                client.get('test-connection', (err) => {
+                    if (err && err.message !== 'Not Found') {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+        } finally {
+            // Best-effort cleanup
+            try {
+                if (typeof client.end === 'function') {
+                    client.end();
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
+    };
+}
+
 export function connectMemcached(config) {
     return async dispatch => {
         try {
@@ -47,6 +75,7 @@ export function connectMemcached(config) {
                 type: 'Memcached',
                 client: memcachedClient
             }));
+            return memcachedClient;
         } catch (error) {
             console.error('Memcached connection error:', error);
             dispatch(connectMemcachedError(error));
