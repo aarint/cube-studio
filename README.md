@@ -149,11 +149,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 Cube Studio is licensed under the [MIT License](LICENSE).
 
-## 👤 Author
-
-**aarint**
-- GitHub: [@aarint](https://github.com/aarint)
-
----
-
-Made with ❤️ using Electron and React
