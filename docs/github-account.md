@@ -30,6 +30,30 @@ git config user.email  # aardoit@gmail.com
 git log -1 --format='%an <%ae>'
 ```
 
+## Branch model
+
+`master` is the default and protected branch, and every branch is merged into
+it. The two older branches are kept only as release history:
+
+| Branch | State |
+| --- | --- |
+| `master` | default, protected, level with `1.1.0` |
+| `1.1.0` | fully merged into `master`; no unique commits |
+| `1.0.0` | fully merged into `master`; no unique commits |
+
+Enable the protection rule once, from a machine with a token that has admin
+rights on the repository:
+
+```bash
+gh auth login                      # or export GH_TOKEN=...
+./scripts/protect-master.sh
+```
+
+That rule blocks force-pushes and branch deletion, requires conversations to be
+resolved, and applies to administrators too. It deliberately does not require an
+approving review: this is a single-maintainer repository, so a mandatory second
+approval would block every change.
+
 ## Releasing
 
 Releases are published by `.github/workflows/release.yml`, which runs as the
