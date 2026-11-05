@@ -1,0 +1,90 @@
+# Middleware used by `cargo test --features integration`.
+#
+# Ports are deliberately unusual so the tests never touch an instance you already
+# have running on the default port.
+#
+#   docker compose -f docker-compose.test.yml up -d
+#   cargo test --features integration --manifest-path src-tauri/Cargo.toml
+#   docker compose -f docker-compose.test.yml down -v
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "26379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  memcached:
+    image: memcached:1.6-alpine
+    # `-o lru_crawler` enables `lru_crawler metadump`, the only complete way to
+    # enumerate keys, and the path the driver prefers.
+    command: ["-o", "lru_crawler"]
+    ports:
+      - "21211:11211"
+
+  # Advertises a host-reachable address: the broker tells clients where to
+  # reconnect, so a container-internal listener would hang the test client.
+  kafka:
+    image: apache/kafka:latest
+    ports:
+      - "19092:19092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:19092,CONTROLLER://0.0.0.0:19093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:19092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@127.0.0.1:19093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    healthcheck:
+      test:
+        ["CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "127.0.0.1:19092", "--list"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "15672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+  nats:
+    image: nats:2-alpine
+    # JetStream is required for the stream browsing tests.
+    command: ["-js"]
+    ports:
+      - "14222:4222"
+      - "18222:8222"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8222/healthz"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  mqtt:
+    image: eclipse-mosquitto:2
+    ports:
+      - "11883:1883"
+    # Anonymous access on a test instance only; the tests publish and read
+    # retained messages and need no credentials.
+    command:
+      - "sh"
+      - "-c"
+      - |
+        printf 'listener 1883 0.0.0.0\nallow_anonymous true\n' > /mosquitto/config/mosquitto.conf
+        exec mosquitto -c /mosquitto/config/mosquitto.conf
