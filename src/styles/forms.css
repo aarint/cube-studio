@@ -1,0 +1,627 @@
+/*
+ * Welcome view and connection dialog.
+ *
+ * The welcome screen is the one place in the app that is allowed to be
+ * spacious: it is the only screen a user sees without having chosen anything
+ * yet, so it explains rather than competes.
+ */
+
+.welcome {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-8) var(--space-6);
+}
+
+.welcome__inner {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.welcome__intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.welcome__title {
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.welcome__lede {
+  margin: 0;
+  max-width: 58ch;
+  font-size: var(--text-md);
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.welcome__kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* Each backend is a real tile, not a decorative chip: it is the fastest way to
+   start a connection. */
+.kind-tile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius);
+  background: var(--surface-base);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 550;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+
+.kind-tile:hover {
+  border-color: var(--accent-line);
+  background: var(--surface-raised);
+  color: var(--text-primary);
+}
+
+.kind-tile__glyph {
+  color: var(--text-tertiary);
+  display: grid;
+  place-items: center;
+}
+
+.kind-tile:hover .kind-tile__glyph {
+  color: var(--accent-strong);
+}
+
+/* ---- saved connections ------------------------------------------------- */
+
+.saved {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.saved__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.saved__title {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.saved__rule {
+  flex: 1;
+  height: 1px;
+  background: var(--line-faint);
+}
+
+.saved__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-3);
+}
+
+.saved-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-lg);
+  background: var(--surface-base);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+
+.saved-card:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-raised);
+}
+
+.saved-card__top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.saved-card__glyph {
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+}
+
+.saved-card__name {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-card__endpoint {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+.saved-card:hover .saved-card__actions,
+.saved-card:focus-within .saved-card__actions {
+  opacity: 1;
+}
+
+/* ---- dialog ------------------------------------------------------------ */
+
+/*
+ * A dialog is a surface that takes over the centre of the window, not a card
+ * floating in a blur: the backdrop dims the workspace so the form is the only
+ * thing in focus.
+ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: rgb(0 0 0 / 55%);
+  backdrop-filter: blur(1.5px);
+  animation: fade-in var(--dur) var(--ease);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: min(600px, 100%);
+  max-height: calc(100vh - var(--space-12));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface-base);
+  box-shadow: 0 24px 64px rgb(0 0 0 / 48%);
+  animation: modal-in var(--dur) var(--ease);
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--line-faint);
+}
+
+.modal__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.modal__close {
+  margin-left: auto;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.modal__close:hover {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+}
+
+.modal__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.modal__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--line-faint);
+  background: var(--surface-sunken);
+}
+
+.modal__footer-spacer {
+  flex: 1;
+}
+
+/* ---- form layout ------------------------------------------------------- */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3) var(--space-4);
+}
+
+.form-grid__full {
+  grid-column: 1 / -1;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.form-section__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.form-section__rule {
+  flex: 1;
+  height: 1px;
+  background: var(--line-faint);
+}
+
+/* Backend picker inside the dialog: a row of radio-style tiles. */
+.backend-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.backend-option {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius);
+  background: var(--surface-input);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+
+.backend-option:hover {
+  border-color: var(--line-strong);
+}
+
+.backend-option--active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.backend-option__label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.backend-option__port {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+/* Inline checkbox row. */
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.check input {
+  margin-top: 2px;
+  accent-color: var(--accent);
+}
+
+.check__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.check__hint {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+/* Inline validation message, tied to a field. */
+.field__error {
+  font-size: var(--text-xs);
+  color: var(--danger);
+}
+
+/* Result banner inside the dialog after a test. */
+.probe {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  font-size: var(--text-sm);
+}
+
+.probe--ok {
+  border-color: rgba(61, 220, 151, 0.32);
+  background: var(--live-dim);
+}
+
+.probe--error {
+  border-color: rgba(255, 107, 107, 0.32);
+  background: var(--danger-dim);
+}
+
+.probe__glyph {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  margin-top: 1px;
+}
+
+.probe--ok .probe__glyph {
+  color: var(--live);
+}
+
+.probe--error .probe__glyph {
+  color: var(--danger);
+}
+
+.probe__body {
+  min-width: 0;
+}
+
+.probe__title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.probe__detail {
+  margin-top: 2px;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+/* ---- stats and console drawers ---------------------------------------- */
+
+.stats {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  overflow-y: auto;
+}
+
+.stats__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.stats__title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.stats__row {
+  display: grid;
+  grid-template-columns: minmax(140px, 240px) 1fr;
+  gap: var(--space-3);
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.stats__row:nth-child(even) {
+  background: var(--surface-sunken);
+}
+
+.stats__key {
+  color: var(--text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats__value {
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.console {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.console__output {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.console__entry {
+  margin-bottom: var(--space-3);
+}
+
+.console__prompt {
+  color: var(--accent-strong);
+}
+
+.console__command {
+  color: var(--text-primary);
+}
+
+.console__reply {
+  color: var(--text-secondary);
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--line-faint);
+  margin-top: 2px;
+}
+
+.console__reply--error {
+  color: var(--danger);
+}
+
+.console__timing {
+  margin-left: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.console__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--line-faint);
+  background: var(--surface-sunken);
+}
+
+.console__input {
+  flex: 1;
+  height: 30px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-input);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.console__input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+/* ---- notices ---------------------------------------------------------- */
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  background: var(--warn-dim);
+  color: var(--warn);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+.notice__glyph {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.notice--info {
+  background: var(--accent-dim);
+  color: var(--accent-strong);
+}
+
+/* Skeleton rows while a page loads: shape without motion. */
+.skeleton-row {
+  height: 30px;
+  margin: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--surface-base) 0%,
+    var(--surface-raised) 50%,
+    var(--surface-base) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}

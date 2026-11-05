@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Cube Studio (monochrome)">
+  <title>Cube Studio</title>
+  <!-- Single-colour mark: works embossed, reversed, or printed. -->
+  <polygon points="88,201 256,298 256,438 88,341" fill="#111111"/>
+  <polygon points="424,201 256,298 256,438 424,341" fill="#111111"/>
+  <polygon points="256,104 424,201 256,298 88,201" fill="#ffffff"/>
+  <polygon points="256,104 397,185 256,266 115,185" fill="#111111"/>
+  <circle cx="256" cy="185" r="46" fill="#ffffff"/>
+</svg>

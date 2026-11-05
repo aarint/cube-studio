@@ -1,4 +1,18 @@
 node_modules
-package-lock.json
-.claude
 dist
+.DS_Store
+*.log
+
+# Rust
+src-tauri/target
+src-tauri/gen
+
+# Local editor state
+.claude
+.vscode/settings.json
+
+# Locally built installers (CI attaches these to GitHub releases)
+dist-installers
+
+# Scratch workspace used while designing the logo
+design/_logo-workspace.html

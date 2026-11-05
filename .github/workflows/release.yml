@@ -1,0 +1,224 @@
+name: release
+
+# Builds installers for every desktop platform and publishes them as a GitHub
+# release when a version tag is pushed.
+#
+# The pipeline is split into two jobs on purpose: `build` runs per platform and
+# only produces artefacts, `publish` runs once and owns the release. That way a
+# failed platform cannot produce a half-populated release, and the upload logic
+# exists in exactly one place.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+# Two uploaders on the same tag would race each other's asset names.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  NODE_VERSION: "22"
+  RUST_BACKTRACE: "1"
+
+jobs:
+  build:
+    strategy:
+      # A failing platform must not cancel the others: the partial results tell
+      # us which platform needs attention.
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-14
+            target: aarch64-apple-darwin
+            label: macOS Apple Silicon
+          - platform: macos-14
+            target: x86_64-apple-darwin
+            label: macOS Intel
+          - platform: ubuntu-22.04
+            target: ""
+            label: Linux x86_64
+          - platform: windows-latest
+            target: ""
+            label: Windows x86_64
+
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            libgtk-3-dev \
+            libxdo-dev \
+            libssl-dev \
+            patchelf \
+            build-essential \
+            file
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # The macOS runner is arm64; the Intel slice needs an extra target.
+          targets: ${{ matrix.target == 'x86_64-apple-darwin' && 'x86_64-apple-darwin' || '' }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+          key: ${{ matrix.target || 'host' }}
+
+      - name: Verify the version manifests agree
+        run: node scripts/set-version.mjs --check
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build installers
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${{ matrix.target }}" ]; then
+            npx tauri build --target "${{ matrix.target }}"
+          else
+            npx tauri build
+          fi
+
+      # Normalise every platform's output into one flat directory so the publish
+      # job does not need to know where each bundler puts its files.
+      - name: Collect installers
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upload
+          find src-tauri/target -path '*/release/bundle/*' \
+            \( -name '*.dmg' -o -name '*.deb' -o -name '*.rpm' \
+               -o -name '*.AppImage' -o -name '*.msi' -o -name '*setup.exe' \) \
+            -type f -exec cp -v {} upload/ \;
+          echo "--- collected ---"
+          ls -l upload
+
+      - name: Refuse to upload nothing
+        shell: bash
+        run: |
+          set -euo pipefail
+          count=$(ls -1 upload | wc -l | tr -d ' ')
+          if [ "$count" -eq 0 ]; then
+            echo "::error::no installers were produced for ${{ matrix.label }}"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.target || matrix.platform }}
+          path: upload/*
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    # Only publish for a real tag, and only if every platform succeeded: a
+    # release missing a platform is worse than no release.
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: installers-*
+          path: assets
+          merge-multiple: true
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          echo "Assets to publish:"
+          ls -l assets
+
+          # Fail early on a truncated download rather than shipping it.
+          find assets -type f -size -1k -print -exec false {} +
+
+          cat > notes.md <<'EOF'
+          Cube Studio — a desktop client for Redis, Memcached, Kafka, RabbitMQ,
+          NATS and MQTT, with managed-cloud discovery.
+
+          ### Downloads
+
+          | Platform | File |
+          | --- | --- |
+          | macOS (Apple Silicon) | `*_aarch64.dmg` |
+          | macOS (Intel) | `*_x64.dmg` |
+          | Linux | `*.AppImage`, `*.deb`, `*.rpm` |
+          | Windows | `*.msi`, `*_x64-setup.exe` |
+
+          macOS builds are not notarised, so Gatekeeper warns on first launch:
+          right-click the app → **Open**, or allow it under
+          **System Settings → Privacy & Security**.
+
+          ### Security
+
+          Connection profiles and secrets are encrypted with AES-256-GCM under a
+          key bound to your OS account. Cloud credentials are used for the API
+          call and never written to disk.
+          EOF
+
+          # `--verify-tag` guarantees we never invent a release for a typo.
+          gh release create "$TAG" \
+            --verify-tag \
+            --title "Cube Studio $TAG" \
+            --notes-file notes.md \
+            assets/*
+
+      - name: Verify the published release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          assets=$(gh release view "$TAG" --json assets --jq '.assets[] | "\(.name) \(.size)"')
+          echo "Published assets (name, bytes):"
+          echo "$assets"
+
+          status=0
+          require() {
+            local pattern="$1" label="$2" line
+            line=$(grep -iE "$pattern" <<<"$assets" || true)
+            if [ -z "$line" ]; then
+              echo "::error::missing $label"
+              status=1
+              return
+            fi
+            # A tiny asset means a truncated upload.
+            if [ "$(awk '{print $NF}' <<<"$line")" -lt 102400 ]; then
+              echo "::error::$label is suspiciously small"
+              status=1
+            fi
+          }
+
+          require 'aarch64.*\.dmg [0-9]+'      "macOS Apple Silicon dmg"
+          require 'x64.*\.dmg [0-9]+'          "macOS Intel dmg"
+          require '\.AppImage [0-9]+'          "Linux AppImage"
+          require '\.deb [0-9]+'               "Linux deb"
+          require '(\.msi|setup\.exe) [0-9]+'  "Windows installer"
+
+          exit $status
