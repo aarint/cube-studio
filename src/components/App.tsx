@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { ConnectionDialog, emptyConfig } from "@/components/ConnectionDialog";
+import { LanguagePicker } from "@/components/LanguagePicker";
 import {
   BackendGlyph,
   IconClose,
@@ -10,6 +11,7 @@ import {
 import { useToast } from "@/components/Toast";
 import { Welcome } from "@/components/Welcome";
 import { Workspace } from "@/components/Workspace";
+import { useI18n } from "@/i18n/I18nProvider";
 import * as ipc from "@/lib/ipc";
 import { BACKEND_LABELS } from "@/lib/format";
 import type { AppMetadata, SessionDescriptor } from "@/types/api";
@@ -22,6 +24,7 @@ import type { AppMetadata, SessionDescriptor } from "@/types/api";
  */
 export function App() {
   const toast = useToast();
+  const { t, tn } = useI18n();
   const [metadata, setMetadata] = useState<AppMetadata | null>(null);
   const [sessions, setSessions] = useState<SessionDescriptor[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -93,7 +96,7 @@ export function App() {
             <span className="rail__brand-mark" aria-hidden="true">
               ◆
             </span>
-            Cube Studio
+            {t("app.name")}
           </div>
           <span className="rail__version">
             {metadata ? `v${metadata.version}` : ""}
@@ -106,11 +109,11 @@ export function App() {
               className="field__hint"
               style={{ padding: "var(--space-3) var(--space-2)" }}
             >
-              No open connections.
+              {t("rail.noSessions")}
             </p>
           ) : (
             <>
-              <div className="rail__section-label">Open</div>
+              <div className="rail__section-label">{t("rail.open")}</div>
               {sessions.map((session) => (
                 <div
                   key={session.session_id}
@@ -145,7 +148,7 @@ export function App() {
                   <button
                     type="button"
                     className="rail-item__close"
-                    aria-label={`Close ${session.name}`}
+                    aria-label={t("rail.closeConnection", { name: session.name })}
                     onClick={(event) => {
                       event.stopPropagation();
                       void closeSession(session.session_id);
@@ -160,6 +163,7 @@ export function App() {
         </div>
 
         <div className="rail__footer">
+          <LanguagePicker />
           <button
             type="button"
             className="btn btn--primary"
@@ -167,7 +171,7 @@ export function App() {
             onClick={() => setDialogOpen(true)}
           >
             <IconPlus size={13} />
-            New connection
+            {t("rail.newConnection")}
           </button>
         </div>
       </aside>
@@ -175,7 +179,7 @@ export function App() {
       <main className="workspace">
         {bootError ? (
           <div className="empty-state" style={{ height: "100%" }}>
-            <div className="empty-state__title">The backend did not start</div>
+            <div className="empty-state__title">{t("error.internal")}</div>
             <p className="empty-state__body">{bootError}</p>
             <button
               type="button"
@@ -183,7 +187,7 @@ export function App() {
               onClick={() => window.location.reload()}
             >
               <IconRefresh size={13} />
-              Retry
+              {t("stats.refresh")}
             </button>
           </div>
         ) : active ? (
@@ -205,7 +209,7 @@ export function App() {
                   onClick={() => void refreshSessions()}
                 >
                   <IconRefresh size={12} />
-                  Refresh
+                  {t("rail.refresh")}
                 </button>
               </div>
             </header>
@@ -227,14 +231,14 @@ export function App() {
             <span
               className={`statusbar__dot ${active ? "" : "statusbar__dot--idle"}`}
             />
-            {active ? "connected" : "idle"}
+            {active ? t("status.connected") : t("status.idle")}
           </span>
           {active ? (
             <span className="statusbar__item">{active.endpoints[0] ?? ""}</span>
           ) : null}
           <span className="statusbar__spacer" />
           <span className="statusbar__item">
-            {sessions.length} session{sessions.length === 1 ? "" : "s"}
+            {tn("rail.sessions", sessions.length)}
           </span>
           {metadata ? (
             <span className="statusbar__item">{metadata.platform}</span>

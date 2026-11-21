@@ -31,29 +31,32 @@ describe("validate", () => {
   });
 
   it("rejects an empty host", () => {
-    expect(validate(withChanges({ host: "   " }))).toContain("Host");
+    // `validate` returns a message key, not a sentence: translation happens in
+    // the component so word order stays correct per language.
+    expect(validate(withChanges({ host: "   " }))?.key).toBe("dialog.error.host");
   });
 
   it("rejects out-of-range ports", () => {
-    expect(validate(withChanges({ port: 0 }))).toContain("Port");
-    expect(validate(withChanges({ port: 70000 }))).toContain("Port");
-    expect(validate(withChanges({ port: 1.5 }))).toContain("Port");
+    expect(validate(withChanges({ port: 0 }))?.key).toBe("dialog.error.port");
+    expect(validate(withChanges({ port: 70000 }))?.key).toBe("dialog.error.port");
+    expect(validate(withChanges({ port: 1.5 }))?.key).toBe("dialog.error.port");
   });
 
   it("requires a sentinel master name", () => {
     expect(
       validate(
         withChanges({ kind: "redis", redis_mode: "sentinel", port: 26379 }),
-      ),
-    ).toContain("master name");
+      )?.key,
+    ).toBe("dialog.error.sentinel");
   });
 
   it("requires a username for Kafka SASL", () => {
-    expect(
-      validate(
-        withChanges({ kind: "kafka", kafka_sasl_mechanism: "plain", port: 9092 }),
-      ),
-    ).toContain("username");
+    const issue = validate(
+      withChanges({ kind: "kafka", kafka_sasl_mechanism: "plain", port: 9092 }),
+    );
+    expect(issue?.key).toBe("dialog.error.sasl");
+    // The mechanism travels as a variable so each language can place it.
+    expect(issue?.vars).toEqual({ mechanism: "PLAIN" });
   });
 
   it("allows Kafka SASL with a username", () => {

@@ -8,6 +8,7 @@ import {
   IconTrash,
 } from "@/components/icons";
 import { useToast } from "@/components/Toast";
+import { useI18n } from "@/i18n/I18nProvider";
 import * as ipc from "@/lib/ipc";
 import { BACKEND_BLURBS, BACKEND_LABELS } from "@/lib/format";
 import type {
@@ -31,6 +32,7 @@ interface WelcomeProps {
  */
 export function Welcome({ metadata, onOpened }: WelcomeProps) {
   const toast = useToast();
+  const { t } = useI18n();
   const [profiles, setProfiles] = useState<ConnectionConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -42,7 +44,7 @@ export function Welcome({ metadata, onOpened }: WelcomeProps) {
       setProfiles(await ipc.listProfiles());
     } catch (error) {
       toast.error(
-        "Could not load saved connections",
+        t("welcome.loadFailed"),
         error instanceof ipc.IpcError ? error.message : String(error),
       );
     } finally {
@@ -67,7 +69,7 @@ export function Welcome({ metadata, onOpened }: WelcomeProps) {
       onOpened(session.session_id);
     } catch (error) {
       toast.error(
-        "Could not connect",
+        t("welcome.connectFailed"),
         error instanceof ipc.IpcError ? error.message : String(error),
       );
     } finally {
@@ -78,11 +80,11 @@ export function Welcome({ metadata, onOpened }: WelcomeProps) {
   const remove = async (profile: ConnectionConfig) => {
     try {
       await ipc.deleteProfile(profile.id);
-      toast.info("Connection removed", profile.name);
+      toast.info(t("welcome.removed"), profile.name);
       await refresh();
     } catch (error) {
       toast.error(
-        "Could not remove",
+        t("welcome.removeFailed"),
         error instanceof ipc.IpcError ? error.message : String(error),
       );
     }
@@ -94,11 +96,8 @@ export function Welcome({ metadata, onOpened }: WelcomeProps) {
     <div className="welcome">
       <div className="welcome__inner">
         <div className="welcome__intro">
-          <h1 className="welcome__title">Everything you cache and stream</h1>
-          <p className="welcome__lede">
-            Cube Studio inspects caches, queues and event logs from one place.
-            Pick a middleware to get started, or reopen a saved connection.
-          </p>
+          <h1 className="welcome__title">{t("welcome.title")}</h1>
+          <p className="welcome__lede">{t("welcome.lede")}</p>
           <div className="welcome__kinds">
             {kinds.map((backend) => (
               <button
@@ -119,7 +118,7 @@ export function Welcome({ metadata, onOpened }: WelcomeProps) {
 
         <section className="saved">
           <div className="saved__header">
-            <h2 className="saved__title">Saved connections</h2>
+            <h2 className="saved__title">{t("welcome.saved")}</h2>
             <span className="saved__rule" />
             <button
               type="button"
@@ -127,7 +126,7 @@ export function Welcome({ metadata, onOpened }: WelcomeProps) {
               onClick={() => openNew()}
             >
               <IconPlus size={12} />
-              New connection
+              {t("rail.newConnection")}
             </button>
           </div>
 
@@ -138,18 +137,15 @@ export function Welcome({ metadata, onOpened }: WelcomeProps) {
             </div>
           ) : profiles.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-state__title">No saved connections yet</div>
-              <p className="empty-state__body">
-                Connections you save are encrypted with a key bound to this
-                machine and user account. Nothing is sent anywhere else.
-              </p>
+              <div className="empty-state__title">{t("welcome.empty.title")}</div>
+              <p className="empty-state__body">{t("welcome.empty.body")}</p>
               <button
                 type="button"
                 className="btn btn--primary"
                 onClick={() => openNew()}
               >
                 <IconPlus size={13} />
-                Add your first connection
+                {t("welcome.empty.cta")}
               </button>
             </div>
           ) : (
@@ -167,7 +163,7 @@ export function Welcome({ metadata, onOpened }: WelcomeProps) {
                       void openSaved(profile);
                     }
                   }}
-                  aria-label={`Open ${profile.name || profile.host}`}
+                  aria-label={t("welcome.open")}
                 >
                   <div className="saved-card__top">
                     <span className="saved-card__glyph">
@@ -194,12 +190,14 @@ export function Welcome({ metadata, onOpened }: WelcomeProps) {
                         void openSaved(profile);
                       }}
                     >
-                      {connectingId === profile.id ? "Opening…" : "Open"}
+                      {connectingId === profile.id
+                        ? t("welcome.opening")
+                        : t("welcome.open")}
                     </button>
                     <button
                       type="button"
                       className="btn btn--ghost btn--sm btn--icon"
-                      aria-label={`Edit ${profile.name}`}
+                      aria-label={t("welcome.edit", { name: profile.name })}
                       onClick={(event) => {
                         event.stopPropagation();
                         setEditing(profile);
@@ -211,7 +209,7 @@ export function Welcome({ metadata, onOpened }: WelcomeProps) {
                     <button
                       type="button"
                       className="btn btn--danger btn--sm btn--icon"
-                      aria-label={`Remove ${profile.name}`}
+                      aria-label={t("welcome.remove", { name: profile.name })}
                       onClick={(event) => {
                         event.stopPropagation();
                         void remove(profile);

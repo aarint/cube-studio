@@ -13,6 +13,7 @@ import {
   IconTrash,
 } from "@/components/icons";
 import { useToast } from "@/components/Toast";
+import { useI18n, type MessageKey } from "@/i18n/I18nProvider";
 import * as ipc from "@/lib/ipc";
 import {
   formatBytes,
@@ -40,6 +41,7 @@ type Mode = "value" | "tail" | "console" | "stats";
 
 export function Workspace({ session }: WorkspaceProps) {
   const toast = useToast();
+  const { t } = useI18n();
   const caps = session.info.capabilities;
 
   const [containers, setContainers] = useState<Container[]>([]);
@@ -70,7 +72,7 @@ export function Workspace({ session }: WorkspaceProps) {
       });
     } catch (error) {
       toast.error(
-        "Could not list containers",
+        t("workspace.listContainersFailed"),
         error instanceof ipc.IpcError ? error.message : String(error),
       );
     } finally {
@@ -101,7 +103,7 @@ export function Workspace({ session }: WorkspaceProps) {
         );
       } catch (error) {
         toast.error(
-          "Could not list entries",
+          t("workspace.listEntriesFailed"),
           error instanceof ipc.IpcError ? error.message : String(error),
         );
         setPage({ entries: [] });
@@ -139,7 +141,7 @@ export function Workspace({ session }: WorkspaceProps) {
       );
     } catch (error) {
       toast.error(
-        "Could not read entry",
+        t("workspace.readFailed"),
         error instanceof ipc.IpcError ? error.message : String(error),
       );
     } finally {
@@ -161,15 +163,15 @@ export function Workspace({ session }: WorkspaceProps) {
     <div className="panes">
       <aside className="pane" aria-label="Containers">
         <div className="pane__header">
-          <span className="pane__title">{containerPaneTitle(session.kind)}</span>
+          <span className="pane__title">{containerPaneTitle(session.kind, t)}</span>
           <span className="pane__count">{containers.length}</span>
           <div className="pane__tools">
             <button
               type="button"
               className="btn btn--ghost btn--sm btn--icon"
               onClick={() => void loadContainers()}
-              aria-label="Refresh containers"
-              title="Refresh containers"
+              aria-label={t("workspace.refreshContainers")}
+              title={t("workspace.refreshContainers")}
             >
               <IconRefresh size={13} />
             </button>
@@ -185,7 +187,7 @@ export function Workspace({ session }: WorkspaceProps) {
           ) : containers.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state__body">
-                {caps.notes[0] ?? "Nothing to browse here."}
+                {caps.notes[0] ?? t("workspace.noEntries")}
               </div>
             </div>
           ) : (
@@ -236,7 +238,7 @@ export function Workspace({ session }: WorkspaceProps) {
 
       <section className="pane" aria-label="Entries">
         <div className="pane__header">
-          <span className="pane__title">{modeTitle(mode)}</span>
+          <span className="pane__title">{modeTitle(mode, t)}</span>
           {mode === "value" && page ? (
             <span className="pane__count">
               {page.total ?? page.entries.length}
@@ -253,16 +255,16 @@ export function Workspace({ session }: WorkspaceProps) {
                     className="search__input"
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Filter…"
-                    aria-label="Filter entries"
+                    placeholder={t("workspace.filter")}
+                    aria-label={t("workspace.filterEntries")}
                   />
                 </div>
                 <button
                   type="button"
                   className="btn btn--ghost btn--sm btn--icon"
                   onClick={refreshEntries}
-                  aria-label="Refresh entries"
-                  title="Refresh entries"
+                  aria-label={t("workspace.refreshEntries")}
+                  title={t("workspace.refreshEntries")}
                 >
                   <IconRefresh size={13} />
                 </button>
@@ -291,10 +293,10 @@ export function Workspace({ session }: WorkspaceProps) {
               }
               emptyHint={
                 !caps.list_entries
-                  ? "This backend cannot enumerate entries. Use the live view."
+                  ? t("workspace.cannotEnumerate")
                   : activeContainer
-                    ? "No entries match."
-                    : "Select a container first."
+                    ? t("workspace.noEntries")
+                    : t("workspace.selectContainer")
               }
             />
           ) : null}
@@ -326,13 +328,13 @@ export function Workspace({ session }: WorkspaceProps) {
                     activeContainer,
                   );
                   toast.success(
-                    "Flushed",
+                    t("workspace.flushed"),
                     result.message ?? activeMeta?.name ?? "",
                   );
                   refreshEntries();
                 } catch (error) {
                   toast.error(
-                    "Could not flush",
+                    t("workspace.flushFailed"),
                     error instanceof ipc.IpcError
                       ? error.message
                       : String(error),
@@ -360,33 +362,36 @@ export function Workspace({ session }: WorkspaceProps) {
   );
 }
 
-function containerPaneTitle(kind: string): string {
+function containerPaneTitle(
+  kind: string,
+  t: (key: MessageKey) => string,
+): string {
   switch (kind) {
     case "redis":
-      return "Databases";
+      return t("workspace.panes.databases");
     case "kafka":
-      return "Topics";
+      return t("workspace.panes.topics");
     case "rabbitmq":
-      return "Queues";
+      return t("workspace.panes.queues");
     case "nats":
-      return "Streams";
+      return t("workspace.panes.streams");
     case "mqtt":
-      return "Filters";
+      return t("workspace.panes.filters");
     default:
-      return "Server";
+      return t("workspace.panes.server");
   }
 }
 
-function modeTitle(mode: Mode): string {
+function modeTitle(mode: Mode, t: (key: MessageKey) => string): string {
   switch (mode) {
     case "tail":
-      return "Live";
+      return t("workspace.live");
     case "console":
-      return "Console";
+      return t("workspace.console");
     case "stats":
-      return "Stats";
+      return t("workspace.stats");
     default:
-      return "Entries";
+      return t("workspace.entries");
   }
 }
 
@@ -401,18 +406,19 @@ function ModeTabs({
   onChange: (mode: Mode) => void;
   caps: SessionDescriptor["info"]["capabilities"];
 }) {
+  const { t } = useI18n();
   const tabs: Array<{ id: Mode; label: string }> = [];
   if (caps.list_entries || caps.containers) {
-    tabs.push({ id: "value", label: "Browse" });
+    tabs.push({ id: "value", label: t("workspace.browse") });
   }
   if (caps.tail) {
-    tabs.push({ id: "tail", label: "Live" });
+    tabs.push({ id: "tail", label: t("workspace.live") });
   }
   if (caps.console) {
-    tabs.push({ id: "console", label: "Console" });
+    tabs.push({ id: "console", label: t("workspace.console") });
   }
   if (caps.stats) {
-    tabs.push({ id: "stats", label: "Stats" });
+    tabs.push({ id: "stats", label: t("workspace.stats") });
   }
 
   if (tabs.length <= 1) {
@@ -454,6 +460,7 @@ function EntryList({
   onLoadMore?: () => void;
   emptyHint: string;
 }) {
+  const { t } = useI18n();
   if (loading && entries.length === 0) {
     return (
       <>
@@ -513,7 +520,7 @@ function EntryList({
           onClick={onLoadMore}
           disabled={loading}
         >
-          {loading ? "Loading…" : "Load more"}
+          {loading ? t("workspace.loading") : t("workspace.loadMore")}
         </button>
       ) : null}
     </div>
@@ -536,6 +543,7 @@ function DetailPane({
   onChanged: () => void;
 }) {
   const toast = useToast();
+  const { t } = useI18n();
   const caps = session.info.capabilities;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -550,9 +558,9 @@ function DetailPane({
     return (
       <div className="detail">
         <div className="empty-state">
-          <div className="empty-state__title">Nothing selected</div>
+          <div className="empty-state__title">{t("detail.nothing")}</div>
           <p className="empty-state__body">
-            Pick an entry to inspect its payload.
+            {t("detail.nothingHint")}
           </p>
           {caps.publish && container ? (
             <PublishButton session={session} container={container} />
@@ -576,7 +584,7 @@ function DetailPane({
     // Reject broken JSON before it reaches the store: writing a half-edited
     // object is the most common way to lose data here.
     if (looksLikeJson(draft) === false && draft.trim().startsWith("{")) {
-      toast.error("Invalid JSON", "Fix the brackets before saving.");
+      toast.error(t("detail.invalidJson"), t("detail.invalidJsonHint"));
       return;
     }
     try {
@@ -595,7 +603,7 @@ function DetailPane({
       onChanged();
     } catch (error) {
       toast.error(
-        "Could not save",
+        t("detail.saveFailed"),
         error instanceof ipc.IpcError ? error.message : String(error),
       );
     }
@@ -609,7 +617,7 @@ function DetailPane({
       onChanged();
     } catch (error) {
       toast.error(
-        "Could not delete",
+        t("detail.deleteFailed"),
         error instanceof ipc.IpcError ? error.message : String(error),
       );
     }
@@ -618,9 +626,9 @@ function DetailPane({
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.info("Copied to clipboard");
+      toast.info(t("detail.copied"));
     } catch {
-      toast.warn("Clipboard unavailable");
+      toast.warn(t("detail.clipboardUnavailable"));
     }
   };
 
@@ -638,8 +646,8 @@ function DetailPane({
             type="button"
             className="btn btn--ghost btn--sm btn--icon"
             onClick={() => void copy()}
-            aria-label="Copy payload"
-            title="Copy payload"
+            aria-label={t("detail.copy")}
+            title={t("detail.copy")}
           >
             <IconCopy size={13} />
           </button>
@@ -648,8 +656,8 @@ function DetailPane({
               type="button"
               className="btn btn--ghost btn--sm btn--icon"
               onClick={startEdit}
-              aria-label="Edit payload"
-              title="Edit payload"
+              aria-label={t("detail.edit")}
+              title={t("detail.edit")}
             >
               <IconEdit size={13} />
             </button>
@@ -659,8 +667,8 @@ function DetailPane({
               type="button"
               className="btn btn--danger btn--sm btn--icon"
               onClick={() => void remove()}
-              aria-label="Delete entry"
-              title="Delete entry"
+              aria-label={t("detail.delete")}
+              title={t("detail.delete")}
             >
               <IconTrash size={13} />
             </button>
@@ -715,7 +723,7 @@ function DetailPane({
                 className={`tab ${view === "text" ? "tab--active" : ""}`}
                 onClick={() => setView("text")}
               >
-                JSON
+                {t("detail.json")}
               </button>
               <button
                 type="button"
@@ -724,7 +732,7 @@ function DetailPane({
                 className={`tab ${view === "raw" ? "tab--active" : ""}`}
                 onClick={() => setView("raw")}
               >
-                Raw
+                {t("detail.raw")}
               </button>
             </div>
           ) : null}
@@ -733,7 +741,7 @@ function DetailPane({
             aria-busy={loading}
           >
             {loading
-              ? "Loading…"
+              ? t("workspace.loading")
               : view === "text"
                 ? text
                 : (payload?.text ?? text)}
@@ -761,6 +769,7 @@ function Editor({
   onSave: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useI18n();
   const jsonInvalid = useMemo(() => {
     const trimmed = draft.trim();
     if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
@@ -797,10 +806,10 @@ function Editor({
         <span
           className={`editor__hint ${jsonInvalid ? "editor__hint--invalid" : ""}`}
         >
-          {jsonInvalid ? "Invalid JSON" : "⌘S to save · Esc to cancel"}
+          {jsonInvalid ? t("detail.invalidJson") : t("detail.editorHint")}
         </span>
         <button type="button" className="btn btn--sm" onClick={onCancel}>
-          Cancel
+          {t("detail.cancel")}
         </button>
         <button
           type="button"
@@ -808,7 +817,7 @@ function Editor({
           onClick={onSave}
           disabled={jsonInvalid}
         >
-          Save
+          {t("detail.save")}
         </button>
       </div>
     </div>
@@ -825,6 +834,7 @@ function PublishButton({
   container: string;
 }) {
   const toast = useToast();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [body, setBody] = useState("");
   const [routingKey, setRoutingKey] = useState("");
@@ -849,12 +859,12 @@ function PublishButton({
           partition: session.kind === "kafka" ? partition : null,
         },
       );
-      toast.success("Published", result.message ?? "");
+      toast.success(t("publish.sent"), result.message ?? "");
       setOpen(false);
       setBody("");
     } catch (error) {
       toast.error(
-        "Publish failed",
+        t("publish.failed"),
         error instanceof ipc.IpcError ? error.message : String(error),
       );
     }
@@ -868,7 +878,7 @@ function PublishButton({
         onClick={() => setOpen(true)}
       >
         <IconPlus size={12} />
-        Publish
+        {t("publish.action")}
       </button>
       {open ? (
         <div
@@ -880,12 +890,12 @@ function PublishButton({
         >
           <div className="modal" role="dialog" aria-modal="true">
             <header className="modal__header">
-              <h2 className="modal__title">Publish message</h2>
+              <h2 className="modal__title">{t("publish.title")}</h2>
             </header>
             <div className="modal__body">
               {session.kind === "kafka" ? (
                 <label className="field">
-                  <span className="field__label">Partition</span>
+                  <span className="field__label">{t("publish.partition")}</span>
                   <input
                     className="input mono"
                     type="number"
@@ -904,10 +914,10 @@ function PublishButton({
                   <label className="field">
                     <span className="field__label">
                       {session.kind === "nats"
-                        ? "Subject"
+                        ? t("publish.subject")
                         : session.kind === "mqtt"
-                          ? "Topic"
-                          : "Routing key"}
+                          ? t("publish.topic")
+                          : t("publish.routingKey")}
                     </span>
                     <input
                       className="input mono"
@@ -948,7 +958,7 @@ function PublishButton({
                   <span className="check__text">
                     <span>Retain on the broker</span>
                     <span className="check__hint">
-                      New subscribers receive this message immediately
+                      {t("publish.retainHint")}
                     </span>
                   </span>
                 </label>
@@ -972,14 +982,14 @@ function PublishButton({
                 className="btn"
                 onClick={() => setOpen(false)}
               >
-                Cancel
+                {t("detail.cancel")}
               </button>
               <button
                 type="button"
                 className="btn btn--primary"
                 onClick={() => void send()}
               >
-                Publish
+                {t("publish.action")}
               </button>
             </footer>
           </div>
@@ -1015,6 +1025,7 @@ function TailPanel({
   onUseEntry: (entry: Entry) => void;
 }) {
   const toast = useToast();
+  const { t } = useI18n();
   const [target, setTarget] = useState(() =>
     defaultTailTarget(session.kind, container),
   );
@@ -1055,7 +1066,7 @@ function TailPanel({
       if (event.subscription_id !== subscriptionId) return;
       setSubscriptionId(null);
       toast.info(
-        "Stream ended",
+        t("tail.ended"),
         `${event.messages} message${event.messages === 1 ? "" : "s"} received`,
       );
     });
@@ -1084,7 +1095,7 @@ function TailPanel({
       setPaused(false);
     } catch (error) {
       toast.error(
-        "Could not subscribe",
+        t("tail.subscribeFailed"),
         error instanceof ipc.IpcError ? error.message : String(error),
       );
     }
@@ -1115,7 +1126,7 @@ function TailPanel({
           value={target}
           onChange={(event) => setTarget(event.target.value)}
           disabled={running}
-          aria-label="Subscription target"
+          aria-label={t("tail.target")}
           placeholder={defaultTailTarget(session.kind, container)}
         />
         {running ? (
@@ -1125,14 +1136,14 @@ function TailPanel({
               className="btn btn--sm"
               onClick={() => (paused ? resume() : setPaused(true))}
             >
-              {paused ? `Resume (${pausedCount})` : "Pause"}
+              {paused ? t("tail.resume", { count: pausedCount }) : t("tail.pause")}
             </button>
             <button
               type="button"
               className="btn btn--sm"
               onClick={() => void stop()}
             >
-              Stop
+              {t("tail.stop")}
             </button>
           </>
         ) : (
@@ -1142,15 +1153,15 @@ function TailPanel({
             onClick={() => void start()}
             disabled={!target.trim()}
           >
-            Subscribe
+            {t("tail.subscribe")}
           </button>
         )}
         <button
           type="button"
           className="btn btn--ghost btn--sm btn--icon"
           onClick={() => setMessages([])}
-          aria-label="Clear messages"
-          title="Clear messages"
+          aria-label={t("tail.clear")}
+          title={t("tail.clear")}
         >
           <IconTrash size={12} />
         </button>
@@ -1169,8 +1180,8 @@ function TailPanel({
         {messages.length === 0 ? (
           <div className="tail__empty">
             {running
-              ? "Waiting for messages on this subscription…"
-              : "Subscribe to watch messages arrive in real time."}
+              ? t("tail.waiting")
+              : t("tail.idle")}
           </div>
         ) : (
           messages.map((message, index) => (
@@ -1209,6 +1220,7 @@ function TailPanel({
 // ---- console -----------------------------------------------------------
 
 function ConsolePanel({ session }: { session: SessionDescriptor }) {
+  const { t } = useI18n();
   const [history, setHistory] = useState<
     Array<{ command: string; output: string; error: boolean; ms: number }>
   >([]);
@@ -1218,14 +1230,14 @@ function ConsolePanel({ session }: { session: SessionDescriptor }) {
 
   const placeholder =
     session.kind === "redis"
-      ? "GET some:key"
+      ? t("console.placeholder.redis")
       : session.kind === "nats"
-        ? "subject  payload"
+        ? t("console.placeholder.generic")
         : session.kind === "mqtt"
-          ? "topic  payload"
+          ? t("console.placeholder.generic")
           : session.kind === "rabbitmq"
-            ? "queue_declare orders"
-            : "get some:key";
+            ? t("console.placeholder.rabbit")
+            : t("console.placeholder.memcached");
 
   const run = async () => {
     const trimmed = command.trim();
@@ -1300,7 +1312,7 @@ function ConsolePanel({ session }: { session: SessionDescriptor }) {
             }
           }}
           disabled={busy}
-          aria-label="Command"
+          aria-label={t("console.command")}
         />
         <button
           type="button"
@@ -1308,7 +1320,7 @@ function ConsolePanel({ session }: { session: SessionDescriptor }) {
           onClick={() => void run()}
           disabled={busy || !command.trim()}
         >
-          {busy ? "Running…" : "Run"}
+          {busy ? t("console.running") : t("console.run")}
         </button>
       </div>
     </div>
@@ -1319,6 +1331,7 @@ function ConsolePanel({ session }: { session: SessionDescriptor }) {
 
 function StatsPanel({ session }: { session: SessionDescriptor }) {
   const toast = useToast();
+  const { t } = useI18n();
   const [stats, setStats] = useState<StatItem[] | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -1328,7 +1341,7 @@ function StatsPanel({ session }: { session: SessionDescriptor }) {
       setStats(await ipc.serverStats(session.session_id));
     } catch (error) {
       toast.error(
-        "Could not read stats",
+        t("stats.failed"),
         error instanceof ipc.IpcError ? error.message : String(error),
       );
       setStats([]);
@@ -1355,7 +1368,9 @@ function StatsPanel({ session }: { session: SessionDescriptor }) {
     <div className="stats">
       <div className="row row--between">
         <span className="pane__title">
-          {loading ? "Loading…" : `${stats?.length ?? 0} values`}
+          {loading
+            ? t("workspace.loading")
+            : t("stats.values", { count: stats?.length ?? 0 })}
         </span>
         <button
           type="button"
@@ -1363,7 +1378,7 @@ function StatsPanel({ session }: { session: SessionDescriptor }) {
           onClick={() => void load()}
         >
           <IconRefresh size={12} />
-          Refresh
+          {t("stats.refresh")}
         </button>
       </div>
       {grouped.map(([section, items]) => (
