@@ -7,6 +7,8 @@ import {
   IconTls,
 } from "@/components/icons";
 import { useToast } from "@/components/Toast";
+import { useI18n, type MessageKey } from "@/i18n/I18nProvider";
+import type { Vars } from "@/i18n";
 import * as ipc from "@/lib/ipc";
 import { BACKEND_BLURBS, BACKEND_LABELS } from "@/lib/format";
 import type {
@@ -91,6 +93,7 @@ export function ConnectionDialog({
   metadata,
 }: ConnectionDialogProps) {
   const toast = useToast();
+  const { t } = useI18n();
   const [config, setConfig] = useState<ConnectionConfig>(
     initial ?? emptyConfig(),
   );
@@ -131,7 +134,9 @@ export function ConnectionDialog({
   }, [open, busy, onClose]);
 
   const fields = useMemo(() => backendFields(config.kind), [config.kind]);
-  const validation = useMemo(() => validate(config), [config]);
+  const issue = useMemo(() => validate(config), [config]);
+  // Resolve the issue to a sentence in the active locale; `null` means valid.
+  const validation = issue ? t(issue.key, issue.vars) : null;
 
   const patch = (changes: Partial<ConnectionConfig>) => {
     setConfig((current) => ({ ...current, ...changes }));
@@ -154,7 +159,7 @@ export function ConnectionDialog({
 
   const handleConnect = async () => {
     if (validation) {
-      toast.error("Check the connection settings", validation);
+      toast.error(t("dialog.checkSettings"), validation);
       return;
     }
     setBusy(true);
@@ -175,7 +180,7 @@ export function ConnectionDialog({
         await ipc.deleteProfile(config.id).catch(() => undefined);
       }
       toast.success(
-        "Connected",
+        t("dialog.connected"),
         `${session.name} · ${session.endpoints[0] ?? ""}`,
       );
       onConnected(session.session_id, config);
@@ -183,7 +188,7 @@ export function ConnectionDialog({
     } catch (error) {
       const message =
         error instanceof ipc.IpcError ? error.message : String(error);
-      toast.error("Could not connect", message);
+      toast.error(t("welcome.connectFailed"), message);
       setProbe({ state: "error", message });
     } finally {
       setBusy(false);
@@ -223,13 +228,13 @@ export function ConnectionDialog({
       >
         <header className="modal__header">
           <h2 className="modal__title" id="connection-dialog-title">
-            {initial?.id ? "Edit connection" : "New connection"}
+            {initial?.id ? t("dialog.edit") : t("dialog.new")}
           </h2>
           <button
             type="button"
             className="modal__close"
             onClick={onClose}
-            aria-label="Close dialog"
+            aria-label={t("dialog.close")}
             disabled={busy}
           >
             <IconClose size={14} />
@@ -239,7 +244,7 @@ export function ConnectionDialog({
         <div className="modal__body">
           <section className="form-section">
             <div className="form-section__title">
-              Middleware
+              {t("dialog.middleware")}
               <span className="form-section__rule" />
             </div>
             <div className="backend-picker">
@@ -275,12 +280,12 @@ export function ConnectionDialog({
 
           <section className="form-section">
             <div className="form-section__title">
-              Endpoint
+              {t("dialog.endpoint")}
               <span className="form-section__rule" />
             </div>
             <div className="form-grid">
               <label className="field form-grid__full">
-                <span className="field__label">Name</span>
+                <span className="field__label">{t("dialog.name")}</span>
                 <input
                   ref={nameRef}
                   className="input"
@@ -290,7 +295,7 @@ export function ConnectionDialog({
                 />
               </label>
               <label className="field">
-                <span className="field__label">Host</span>
+                <span className="field__label">{t("dialog.host")}</span>
                 <input
                   className="input mono"
                   value={config.host}
@@ -300,7 +305,7 @@ export function ConnectionDialog({
                 />
               </label>
               <label className="field">
-                <span className="field__label">Port</span>
+                <span className="field__label">{t("dialog.port")}</span>
                 <input
                   className="input mono"
                   type="number"
@@ -319,13 +324,13 @@ export function ConnectionDialog({
           {fields.credentials ? (
             <section className="form-section">
               <div className="form-section__title">
-                Authentication
+                {t("dialog.auth")}
                 <span className="form-section__rule" />
               </div>
               <div className="form-grid">
                 <label className="field">
                   <span className="field__label">
-                    {fields.kafka ? "SASL username" : "Username"}
+                    {fields.kafka ? t("dialog.saslUsername") : t("dialog.username")}
                   </span>
                   <input
                     className="input"
@@ -338,7 +343,7 @@ export function ConnectionDialog({
                 </label>
                 <label className="field">
                   <span className="field__label">
-                    {fields.kafka ? "SASL password" : "Password"}
+                    {fields.kafka ? t("dialog.saslPassword") : t("dialog.password")}
                   </span>
                   <input
                     className="input"
@@ -352,7 +357,7 @@ export function ConnectionDialog({
                 </label>
                 {fields.nats ? (
                   <label className="field form-grid__full">
-                    <span className="field__label">Token</span>
+                    <span className="field__label">{t("dialog.token")}</span>
                     <input
                       className="input mono"
                       type="password"
@@ -362,15 +367,12 @@ export function ConnectionDialog({
                         patch({ token: event.target.value || null })
                       }
                     />
-                    <span className="field__hint">
-                      Used instead of username and password when the server is
-                      configured for token auth.
-                    </span>
+                    <span className="field__hint">{t("dialog.tokenHint")}</span>
                   </label>
                 ) : null}
                 {fields.rabbit ? (
                   <label className="field">
-                    <span className="field__label">Virtual host</span>
+                    <span className="field__label">{t("dialog.vhost")}</span>
                     <input
                       className="input mono"
                       value={config.vhost}
@@ -380,7 +382,7 @@ export function ConnectionDialog({
                 ) : null}
                 {fields.kafka ? (
                   <label className="field">
-                    <span className="field__label">SASL mechanism</span>
+                    <span className="field__label">{t("dialog.saslMechanism")}</span>
                     <select
                       className="select"
                       value={config.kafka_sasl_mechanism}
@@ -402,12 +404,12 @@ export function ConnectionDialog({
           {fields.redis ? (
             <section className="form-section">
               <div className="form-section__title">
-                Redis
+                {t("dialog.redis")}
                 <span className="form-section__rule" />
               </div>
               <div className="form-grid">
                 <label className="field">
-                  <span className="field__label">Deployment</span>
+                  <span className="field__label">{t("dialog.deployment")}</span>
                   <select
                     className="select"
                     value={config.redis_mode}
@@ -415,14 +417,14 @@ export function ConnectionDialog({
                       patch({ redis_mode: event.target.value as RedisMode })
                     }
                   >
-                    <option value="standalone">Standalone</option>
-                    <option value="cluster">Cluster</option>
-                    <option value="sentinel">Sentinel</option>
+                    <option value="standalone">{t("dialog.deployment.standalone")}</option>
+                    <option value="cluster">{t("dialog.deployment.cluster")}</option>
+                    <option value="sentinel">{t("dialog.deployment.sentinel")}</option>
                   </select>
                 </label>
                 {config.redis_mode === "sentinel" ? (
                   <label className="field">
-                    <span className="field__label">Master name</span>
+                    <span className="field__label">{t("dialog.masterName")}</span>
                     <input
                       className="input mono"
                       value={config.redis_sentinel_master ?? ""}
@@ -436,7 +438,7 @@ export function ConnectionDialog({
                   </label>
                 ) : (
                   <label className="field">
-                    <span className="field__label">Database index</span>
+                    <span className="field__label">{t("dialog.databaseIndex")}</span>
                     <input
                       className="input mono"
                       type="number"
@@ -450,7 +452,7 @@ export function ConnectionDialog({
                 )}
                 {config.redis_mode !== "standalone" ? (
                   <label className="field form-grid__full">
-                    <span className="field__label">Additional nodes</span>
+                    <span className="field__label">{t("dialog.extraNodes")}</span>
                     <input
                       className="input mono"
                       value={config.extra_nodes.join(", ")}
@@ -473,23 +475,23 @@ export function ConnectionDialog({
           {fields.mqtt ? (
             <section className="form-section">
               <div className="form-section__title">
-                MQTT
+                {t("dialog.mqtt")}
                 <span className="form-section__rule" />
               </div>
               <div className="form-grid">
                 <label className="field">
-                  <span className="field__label">Client id</span>
+                  <span className="field__label">{t("dialog.clientId")}</span>
                   <input
                     className="input mono"
                     value={config.client_id ?? ""}
-                    placeholder="generated if empty"
+                    placeholder={t("dialog.clientIdHint")}
                     onChange={(event) =>
                       patch({ client_id: event.target.value || null })
                     }
                   />
                 </label>
                 <label className="field">
-                  <span className="field__label">Keep-alive (s)</span>
+                  <span className="field__label">{t("dialog.keepAlive")}</span>
                   <input
                     className="input mono"
                     type="number"
@@ -507,13 +509,13 @@ export function ConnectionDialog({
 
           <section className="form-section">
             <div className="form-section__title">
-              Transport security
+              {t("dialog.tls")}
               <span className="form-section__rule" />
             </div>
             <div className="form-grid">
               <label className="field">
                 <span className="field__label">
-                  <IconTls size={11} /> TLS
+                  <IconTls size={11} /> {t("dialog.tlsMode")}
                 </span>
                 <select
                   className="select"
@@ -522,18 +524,18 @@ export function ConnectionDialog({
                     patch({ tls: event.target.value as TlsMode })
                   }
                 >
-                  <option value="disabled">Disabled</option>
-                  <option value="enabled">Enabled</option>
-                  <option value="insecure">Enabled, no verification</option>
+                  <option value="disabled">{t("dialog.tls.disabled")}</option>
+                  <option value="enabled">{t("dialog.tls.enabled")}</option>
+                  <option value="insecure">{t("dialog.tls.insecure")}</option>
                 </select>
               </label>
               {config.tls !== "disabled" ? (
                 <label className="field">
-                  <span className="field__label">CA bundle</span>
+                  <span className="field__label">{t("dialog.caBundle")}</span>
                   <input
                     className="input mono"
                     value={config.tls_ca_file ?? ""}
-                    placeholder="path to PEM (optional)"
+                    placeholder={t("dialog.caBundleHint")}
                     onChange={(event) =>
                       patch({ tls_ca_file: event.target.value || null })
                     }
@@ -544,11 +546,7 @@ export function ConnectionDialog({
             {config.tls === "insecure" ? (
               <div className="notice">
                 <IconAlert size={13} className="notice__glyph" />
-                <span>
-                  Certificates will not be verified. Any host on the network can
-                  impersonate this server, so use this only against a throwaway
-                  instance.
-                </span>
+                <span>{t("dialog.tlsWarn")}</span>
               </div>
             ) : null}
           </section>
@@ -560,14 +558,14 @@ export function ConnectionDialog({
             style={{ alignSelf: "flex-start" }}
             aria-expanded={showAdvanced}
           >
-            {showAdvanced ? "Hide advanced" : "Show advanced"}
+            {showAdvanced ? t("dialog.advancedHide") : t("dialog.advanced")}
           </button>
 
           {showAdvanced ? (
             <section className="form-section">
               <div className="form-grid">
                 <label className="field">
-                  <span className="field__label">Timeout (s)</span>
+                  <span className="field__label">{t("dialog.timeout")}</span>
                   <input
                     className="input mono"
                     type="number"
@@ -580,7 +578,7 @@ export function ConnectionDialog({
                   />
                 </label>
                 <label className="field">
-                  <span className="field__label">Payload limit (KB)</span>
+                  <span className="field__label">{t("dialog.payloadLimit")}</span>
                   <input
                     className="input mono"
                     type="number"
@@ -595,9 +593,7 @@ export function ConnectionDialog({
                       })
                     }
                   />
-                  <span className="field__hint">
-                    Larger values are truncated before being sent to the window.
-                  </span>
+                  <span className="field__hint">{t("dialog.payloadLimitHint")}</span>
                 </label>
               </div>
             </section>
@@ -607,11 +603,11 @@ export function ConnectionDialog({
             <div className="probe probe--ok">
               <IconCheck size={14} className="probe__glyph" />
               <div className="probe__body">
-                <div className="probe__title">Connection verified</div>
+                <div className="probe__title">{t("dialog.verified")}</div>
                 <div className="probe__detail">
                   {probe.info.server_version
-                    ? `server: ${probe.info.server_version}`
-                    : "server reachable"}
+                    ? t("dialog.verifiedServer", { version: probe.info.server_version })
+                    : t("dialog.verifiedReachable")}
                 </div>
               </div>
             </div>
@@ -621,7 +617,7 @@ export function ConnectionDialog({
             <div className="probe probe--error">
               <IconAlert size={14} className="probe__glyph" />
               <div className="probe__body">
-                <div className="probe__title">Connection failed</div>
+                <div className="probe__title">{t("dialog.failed")}</div>
                 <div className="probe__detail">{probe.message}</div>
               </div>
             </div>
@@ -636,9 +632,9 @@ export function ConnectionDialog({
               onChange={(event) => setRemember(event.target.checked)}
             />
             <span className="check__text">
-              <span>Remember this connection</span>
+              <span>{t("dialog.remember")}</span>
               <span className="check__hint">
-                Stored encrypted in your app data directory
+                {t("dialog.rememberHint")}
               </span>
             </span>
           </label>
@@ -649,7 +645,7 @@ export function ConnectionDialog({
             onClick={() => void handleTest()}
             disabled={probe.state === "testing" || Boolean(validation)}
           >
-            {probe.state === "testing" ? "Testing…" : "Test"}
+            {probe.state === "testing" ? t("dialog.testing") : t("dialog.test")}
           </button>
           <button
             type="button"
@@ -657,7 +653,7 @@ export function ConnectionDialog({
             onClick={() => void handleConnect()}
             disabled={busy || Boolean(validation)}
           >
-            {busy ? "Connecting…" : initial?.id ? "Reconnect" : "Connect"}
+            {busy ? t("dialog.connecting") : initial?.id ? t("dialog.reconnect") : t("dialog.connect")}
             <span className="kbd">⌘↵</span>
           </button>
         </footer>
@@ -666,29 +662,44 @@ export function ConnectionDialog({
   );
 }
 
-/** Return a blocking validation message, or null when the form is usable. */
-export function validate(config: ConnectionConfig): string | null {
+/**
+ * The first blocking problem with the form, or `null` when it is usable.
+ *
+ * Returns a *message key* rather than a sentence: validation runs in a hook-free
+ * helper (so it stays unit-testable), and the caller translates with the active
+ * locale. That keeps word order out of this function, which matters for
+ * languages that put the mechanism name somewhere other than the middle.
+ */
+export function validate(config: ConnectionConfig): ValidationIssue | null {
   if (!config.host.trim()) {
-    return "Host is required.";
+    return { key: "dialog.error.host" };
   }
   if (!Number.isInteger(config.port) || config.port < 1 || config.port > 65535) {
-    return "Port must be between 1 and 65535.";
+    return { key: "dialog.error.port" };
   }
   if (
     config.kind === "redis" &&
     config.redis_mode === "sentinel" &&
     !config.redis_sentinel_master?.trim()
   ) {
-    return "Sentinel mode needs the master name to resolve.";
+    return { key: "dialog.error.sentinel" };
   }
   if (
     config.kind === "kafka" &&
     config.kafka_sasl_mechanism !== "none" &&
     !config.username.trim()
   ) {
-    return `SASL ${config.kafka_sasl_mechanism.toUpperCase()} needs a username.`;
+    return {
+      key: "dialog.error.sasl",
+      vars: { mechanism: config.kafka_sasl_mechanism.toUpperCase() },
+    };
   }
   return null;
+}
+
+export interface ValidationIssue {
+  key: MessageKey;
+  vars?: Vars;
 }
 
 /** True when a profile carries settings that live behind "advanced". */

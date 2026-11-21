@@ -14,6 +14,33 @@ Built with Tauri 2: a Rust core that speaks each protocol natively, and a React
 frontend. The distributed app is a single small binary per platform — there is no
 bundled Node runtime, and no JVM or librdkafka underneath.
 
+![The welcome screen, listing saved connections](docs/screenshots/welcome.png)
+
+## Screenshots
+
+**Redis** — databases on the left, keys in the middle, the decoded value on the
+right. Every value type is rendered usefully rather than as an opaque blob, and
+TTL and size are shown inline.
+
+![Browsing Redis databases and inspecting a hash](docs/screenshots/redis.png)
+
+**Kafka** — topics, then messages newest-first with their offset. The toolbar
+only offers what the protocol allows: Kafka is append-only, so there is no edit
+or delete.
+
+![Browsing Kafka topics and reading a message](docs/screenshots/kafka.png)
+
+**Live tail** — subscribe to a subject, channel, topic or partition and watch
+messages arrive. Pausing buffers rather than dropping, so nothing is lost while
+you read.
+
+![Watching a Kafka topic live](docs/screenshots/live.png)
+
+**Connecting** — one form for all six protocols. Only the fields that apply to
+the chosen middleware appear, and the endpoint is tested before you commit.
+
+![The new-connection dialog, configured for Kafka](docs/screenshots/connect.png)
+
 ## Install
 
 Grab the installer for your platform from

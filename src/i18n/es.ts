@@ -66,7 +66,7 @@ export const es: Catalogue = {
   "dialog.extraNodes": "Nodos adicionales",
   "dialog.clientId": "ID de cliente",
   "dialog.clientIdHint": "se genera si se deja vacío",
-  "dialog.keepAlive": "Keep-alive (s)",
+  "dialog.keepAlive": "Mantener vivo (s)",
   "dialog.tlsMode": "TLS",
   "dialog.tls.disabled": "Desactivado",
   "dialog.tls.enabled": "Activado",

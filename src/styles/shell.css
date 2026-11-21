@@ -396,3 +396,147 @@
     grid-template-columns: 200px 1fr;
   }
 }
+
+/* ---- language picker -------------------------------------------------- */
+
+.lang {
+  position: relative;
+}
+
+.lang__trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.lang__trigger:hover {
+  background: var(--surface-base);
+  border-color: var(--line-faint);
+  color: var(--text-primary);
+}
+
+.lang__globe {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.lang__trigger:hover .lang__globe {
+  color: var(--accent);
+}
+
+.lang__current {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The menu anchors above the trigger, because the picker sits at the bottom of
+   the rail and there is no space below it. */
+.lang__menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + var(--space-2));
+  z-index: 60;
+  padding: var(--space-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-overlay);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 40%);
+  animation: lang-in var(--dur-fast) var(--ease);
+}
+
+@keyframes lang-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.lang__menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.lang__menu-close {
+  border: 0;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 0 2px;
+  display: grid;
+  place-items: center;
+}
+
+.lang__menu-close:hover {
+  color: var(--text-primary);
+}
+
+.lang__option {
+  display: grid;
+  grid-template-columns: 1fr auto 12px;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.lang__option:hover {
+  background: var(--surface-raised);
+}
+
+.lang__option--active {
+  background: var(--accent-dim);
+}
+
+.lang__option-name {
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lang__option--active .lang__option-name {
+  font-weight: 550;
+}
+
+.lang__option-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.lang__option-check {
+  color: var(--accent-strong);
+  font-size: 11px;
+  line-height: 1;
+}

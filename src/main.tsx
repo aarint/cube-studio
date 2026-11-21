@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import { App } from "@/components/App";
 import { ToastProvider } from "@/components/Toast";
+import { I18nProvider } from "@/i18n/I18nProvider";
 
 import "@/styles/tokens.css";
 import "@/styles/shell.css";
@@ -27,9 +28,11 @@ async function bootstrap() {
 
   createRoot(container!).render(
     <StrictMode>
-      <ToastProvider>
-        <App />
-      </ToastProvider>
+      <I18nProvider>
+        <ToastProvider>
+          <App />
+        </ToastProvider>
+      </I18nProvider>
     </StrictMode>,
   );
 }
