@@ -9,6 +9,13 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
+import {
+  normaliseConnectionInfo,
+  normaliseContainer,
+  normaliseEntry,
+  normaliseEntryPage,
+  normaliseSession,
+} from "@/lib/normalise";
 import type {
   AppError,
   AppMetadata,
@@ -250,40 +257,59 @@ export const deleteProfile = (id: string) =>
 
 // ---- connections ------------------------------------------------------
 
-export const connect = (config: ConnectionConfig) =>
-  call<SessionDescriptor>("connect", { config });
+/**
+ * Connect, then repair the descriptor.
+ *
+ * The normalisers run here, at the boundary, rather than in components: the
+ * backend may omit empty collections, and every consumer would otherwise need
+ * to remember that. See `lib/normalise.ts`.
+ */
+export const connect = async (config: ConnectionConfig) =>
+  normaliseSession(await call<SessionDescriptor>("connect", { config }));
 
 export const disconnect = (sessionId: string) =>
   call<void>("disconnect", { sessionId });
 
-export const listSessions = () => call<SessionDescriptor[]>("list_sessions");
+export const listSessions = async () =>
+  (await call<SessionDescriptor[]>("list_sessions")).map(normaliseSession);
 
-export const sessionInfo = (sessionId: string) =>
-  call<ConnectionInfo>("session_info", { sessionId });
+export const sessionInfo = async (sessionId: string) =>
+  normaliseConnectionInfo(
+    await call<ConnectionInfo>("session_info", { sessionId }),
+  );
 
-export const testConnection = (config: ConnectionConfig) =>
-  call<ConnectionInfo>("test_connection", { config });
+export const testConnection = async (config: ConnectionConfig) =>
+  normaliseConnectionInfo(
+    await call<ConnectionInfo>("test_connection", { config }),
+  );
 
 // ---- browsing ---------------------------------------------------------
 
-export const listContainers = (sessionId: string) =>
-  call<Container[]>("list_containers", { sessionId });
+export const listContainers = async (sessionId: string) =>
+  (await call<Container[]>("list_containers", { sessionId })).map(
+    normaliseContainer,
+  );
 
-export const listEntries = (
+export const listEntries = async (
   sessionId: string,
   container: string,
   options: { cursor?: string | null; limit?: number; search?: string | null } = {},
 ) =>
-  call<EntryPage>("list_entries", {
-    sessionId,
-    container,
-    cursor: options.cursor ?? null,
-    limit: options.limit ?? 200,
-    search: options.search ?? null,
-  });
+  normaliseEntryPage(
+    await call<EntryPage>("list_entries", {
+      sessionId,
+      container,
+      cursor: options.cursor ?? null,
+      limit: options.limit ?? 200,
+      search: options.search ?? null,
+    }),
+  );
 
-export const readEntry = (sessionId: string, container: string, entry: string) =>
-  call<Entry>("read_entry", { sessionId, container, entry });
+export const readEntry = async (
+  sessionId: string,
+  container: string,
+  entry: string,
+) => normaliseEntry(await call<Entry>("read_entry", { sessionId, container, entry }));
 
 /** Payload accepted by the write/publish commands. */
 export interface PayloadInput {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { ConnectionDialog, emptyConfig } from "@/components/ConnectionDialog";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LanguagePicker } from "@/components/LanguagePicker";
 import {
   BackendGlyph,
@@ -214,15 +215,25 @@ export function App() {
               </div>
             </header>
             <div className="workspace__body">
-              <Workspace key={active.session_id} session={active} />
+              {/* Keyed by session: switching connections resets the boundary, and
+                  a failure in one session cannot blank another. */}
+              <ErrorBoundary
+                key={active.session_id}
+                label={active.name}
+                onRetry={() => void refreshSessions()}
+              >
+                <Workspace session={active} />
+              </ErrorBoundary>
             </div>
           </>
         ) : (
           <div className="workspace__body">
-            <Welcome
-              metadata={metadata}
-              onOpened={() => void refreshSessions()}
-            />
+            <ErrorBoundary onRetry={() => window.location.reload()}>
+              <Welcome
+                metadata={metadata}
+                onOpened={() => void refreshSessions()}
+              />
+            </ErrorBoundary>
           </div>
         )}
 

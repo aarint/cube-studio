@@ -43,6 +43,10 @@ export function Workspace({ session }: WorkspaceProps) {
   const toast = useToast();
   const { t } = useI18n();
   const caps = session.info.capabilities;
+  // `notes` is normalised at the IPC boundary (lib/normalise.ts). Defaulting
+  // again here means a malformed descriptor degrades instead of blanking the
+  // pane, which is how this crashed before.
+  const notes = caps.notes ?? [];
 
   const [containers, setContainers] = useState<Container[]>([]);
   const [containersLoading, setContainersLoading] = useState(true);
@@ -187,7 +191,7 @@ export function Workspace({ session }: WorkspaceProps) {
           ) : containers.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state__body">
-                {caps.notes[0] ?? t("workspace.noEntries")}
+                {notes[0] ?? t("workspace.noEntries")}
               </div>
             </div>
           ) : (
@@ -208,7 +212,7 @@ export function Workspace({ session }: WorkspaceProps) {
                       : ""
                   }`}
                   onClick={() => setActiveContainer(container.id)}
-                  title={Object.entries(container.meta)
+                  title={Object.entries(container.meta ?? {})
                     .map(([key, value]) => `${key}: ${value}`)
                     .join("\n")}
                 >
@@ -226,11 +230,11 @@ export function Workspace({ session }: WorkspaceProps) {
             </div>
           )}
         </div>
-        {caps.notes.length > 0 ? (
+        {notes.length > 0 ? (
           <div className="pane__footer">
             <div className="notice notice--info">
               <IconAlert size={12} className="notice__glyph" />
-              <span>{caps.notes[0]}</span>
+              <span>{notes[0]}</span>
             </div>
           </div>
         ) : null}
@@ -508,7 +512,7 @@ function EntryList({
             <span className={`kind-chip kind-chip--${entry.kind}`}>
               {entry.kind}
             </span>
-            {entry.meta.preview ? ` ${entry.meta.preview}` : ""}
+            {entry.meta?.preview ? ` ${entry.meta.preview}` : ""}
           </span>
         </button>
       ))}
@@ -694,7 +698,7 @@ function DetailPane({
             <span className="detail__meta-value">{formatTtl(entry.ttl)}</span>
           </span>
         ) : null}
-        {Object.entries(entry.meta)
+        {Object.entries(entry.meta ?? {})
           .filter(([key]) => key !== "preview")
           .slice(0, 6)
           .map(([key, value]) => (
